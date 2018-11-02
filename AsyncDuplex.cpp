@@ -81,6 +81,7 @@ void AsyncDuplex::loop(){
 }
 
 void AsyncDuplex::getResponse(char* buffer, uint16_t length) {
+    strncpy(buffer, inputBuffer, length);
 }
 
 void AsyncDuplex::shiftRight() {
