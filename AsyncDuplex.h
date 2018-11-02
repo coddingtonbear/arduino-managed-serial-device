@@ -3,10 +3,10 @@
 #include <Arduino.h>
 #include <functional>
 
-#define COMMAND_QUEUE_SIZE 10
-#define INPUT_BUFFER_LENGTH 512
-#define MAX_COMMAND_LENGTH 128
-#define MAX_EXPECTATION_LENGTH 128
+#define COMMAND_QUEUE_SIZE 3
+#define INPUT_BUFFER_LENGTH 256
+#define MAX_COMMAND_LENGTH 64
+#define MAX_EXPECTATION_LENGTH 64
 #define COMMAND_TIMEOUT 2500
 
 typedef enum {
