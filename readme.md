@@ -3,6 +3,9 @@
 Asynchronously interact with any serial device having a call-and-response
 style interface.
 
+## Requirements
+
+* Regexp (https://github.com/nickgammon/Regexp)
 
 ## Example
 
