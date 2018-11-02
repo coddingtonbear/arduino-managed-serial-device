@@ -7,6 +7,7 @@
 #define INPUT_BUFFER_LENGTH 512
 #define MAX_COMMAND_LENGTH 128
 #define MAX_EXPECTATION_LENGTH 128
+#define COMMAND_TIMEOUT 2500
 
 typedef enum {
     NEXT,
@@ -18,10 +19,12 @@ class AsyncDuplex {
         AsyncDuplex(Stream*);
 
         bool asyncExecute(
-            const char *command,
-            const char *expectation,
-            AsyncTiming timing = ANY,
-            std::function<void(MatchState)> function = NULL
+            const char *_command,
+            const char *_expectation,
+            AsyncTiming _timing = ANY,
+            std::function<void(MatchState)> _success = NULL,
+            std::function<void()> _failure = NULL,
+            uint16_t _timeout = COMMAND_TIMEOUT
         );
 
         void loop();
@@ -32,7 +35,9 @@ class AsyncDuplex {
         struct AsyncDuplexCommand {
             char command[MAX_COMMAND_LENGTH];
             char expectation[MAX_EXPECTATION_LENGTH];
-            std::function<void(MatchState)> function;
+            std::function<void(MatchState)> success;
+            std::function<void()> failure;
+            uint16_t timeout;
         };
 
         void shiftRight();
@@ -41,6 +46,7 @@ class AsyncDuplex {
         AsyncDuplexCommand commandQueue[COMMAND_QUEUE_SIZE];
         char inputBuffer[INPUT_BUFFER_LENGTH];
         uint16_t bufferPos = 0;
+        uint16_t timeout = 0;
 
         bool processing = false;
 
