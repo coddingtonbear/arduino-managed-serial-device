@@ -140,6 +140,8 @@ unittest(can_execute_chain) {
     GodmodeState* state = GODMODE();
     state->resetPorts();
 
+    uint8_t appendedCallbackCalls = 0;
+
     AsyncDuplex::Command commands[] = {
         AsyncDuplex::Command("TEST", "OK"),
         AsyncDuplex::Command("TEST2", "OK"),
@@ -147,7 +149,15 @@ unittest(can_execute_chain) {
     };
     AsyncDuplex handler = AsyncDuplex();
     handler.begin(&Serial);
-    handler.asyncExecuteChain(commands, 3);
+    handler.asyncExecuteChain(
+        commands,
+        3,
+        AsyncDuplex::Timing::ANY,
+        [&appendedCallbackCalls](MatchState ms) {
+            std::cout << "Executing chain-defined success fn.\n";
+            appendedCallbackCalls++;
+        }
+    );
 
     handler.loop();
     assertEqual(
@@ -158,6 +168,7 @@ unittest(can_execute_chain) {
     state->serialPort[0].dataOut = "";
 
     handler.loop();
+    assertEqual(1, appendedCallbackCalls);
     assertEqual(
         "TEST2\r\n",
         state->serialPort[0].dataOut
@@ -166,11 +177,16 @@ unittest(can_execute_chain) {
     state->serialPort[0].dataOut = "";
 
     handler.loop();
-    handler.loop();
+    assertEqual(2, appendedCallbackCalls);
     assertEqual(
         "TEST3\r\n",
         state->serialPort[0].dataOut
     );
+    state->serialPort[0].dataIn = "OK";
+    state->serialPort[0].dataOut = "";
+
+    handler.loop();
+    assertEqual(3, appendedCallbackCalls);
 }
 
 unittest(can_return_match_groups) {

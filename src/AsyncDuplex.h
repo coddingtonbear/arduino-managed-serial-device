@@ -56,7 +56,9 @@ class AsyncDuplex: public Stream {
         bool asyncExecuteChain(
             Command*,
             uint16_t count,
-            Timing _timing = Timing::ANY
+            Timing _timing = Timing::ANY,
+            std::function<void(MatchState)> _success = NULL,
+            std::function<void(Command*)> _failure = NULL
         );
 
         void loop();
@@ -81,6 +83,11 @@ class AsyncDuplex: public Stream {
 
         void copyCommand(Command*, const Command*);
         void createChain(Command*, const Command*);
+        void appendCallback(
+            Command*,
+            std::function<void(MatchState)> _success = NULL,
+            std::function<void(Command*)> _failure = NULL
+        );
 
         char inputBuffer[INPUT_BUFFER_LENGTH];
         uint16_t bufferPos = 0;

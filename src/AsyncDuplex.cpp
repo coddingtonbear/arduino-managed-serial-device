@@ -77,7 +77,9 @@ bool AsyncDuplex::asyncExecute(
 bool AsyncDuplex::asyncExecuteChain(
     Command* cmdArray,
     uint16_t count,
-    Timing _timing
+    Timing _timing,
+    std::function<void(MatchState)> _success,
+    std::function<void(Command*)> _failure
 ) {
     if(count < 2) {
         return false;
@@ -85,12 +87,14 @@ bool AsyncDuplex::asyncExecuteChain(
 
     Command scratch;
     Command chain = cmdArray[count - 1];
+    AsyncDuplex::appendCallback(&chain, _success, _failure);
 
     for(int16_t i = count - 2; i >= 0; i--) {
         AsyncDuplex::copyCommand(
             &scratch,
             &cmdArray[i]
         );
+        AsyncDuplex::appendCallback(&scratch, _success, _failure);
         AsyncDuplex::createChain(
             &scratch,
             &chain
@@ -142,6 +146,47 @@ void AsyncDuplex::copyCommand(Command* dest, const Command* src) {
     dest->failure = src->failure;
     dest->timeout = src->timeout;
     dest->delay = src->delay;
+}
+
+void AsyncDuplex::appendCallback(
+    Command* cmd, 
+    std::function<void(MatchState)> _success,
+    std::function<void(Command*)> _failure
+) {
+    if(_success) {
+        #ifdef ASYNC_DUPLEX_DEBUG
+            std::cout << "Appending success callback for '";
+            std::cout << cmd->command;
+            std::cout << "'\n";
+        #endif
+        std::function<void(MatchState)> originalFn = cmd->success;
+        cmd->success = [_success, originalFn](MatchState ms){
+            #ifdef ASYNC_DUPLEX_DEBUG
+                std::cout << "Executing success fn.\n";
+            #endif
+            if(originalFn) {
+                originalFn(ms);
+            }
+            _success(ms);
+        };
+    }
+    if(_failure) {
+        #ifdef ASYNC_DUPLEX_DEBUG
+            std::cout << "Appending failure callback to '";
+            std::cout << cmd->command;
+            std::cout << "'\n";
+        #endif
+        std::function<void(Command*)> originalFn = cmd->failure;
+        cmd->failure = [_failure, originalFn](Command* cmd){
+            #ifdef ASYNC_DUPLEX_DEBUG
+                std::cout << "Executing failure fn.\n";
+            #endif
+            if(originalFn) {
+                originalFn(cmd);
+            }
+            _failure(cmd);
+        };
+    }
 }
 
 void AsyncDuplex::loop(){
