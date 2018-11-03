@@ -64,11 +64,9 @@ unittest(can_fail_expectation) {
         "OK",
         AsyncDuplex::NEXT,
         [&callbackExecuted](MatchState ms) {
-            std::cout << "Success fn executed\n";
             callbackExecuted = true;
         },
         [&failureCallbackExecuted](AsyncDuplex::Command* cmd) {
-            std::cout << "Failure fn executed\n";
             failureCallbackExecuted = true;
         },
         0
@@ -101,7 +99,6 @@ unittest(can_fail_expectation_with_display) {
         "OK",
         AsyncDuplex::NEXT,
         [&callbackExecuted](MatchState ms) {
-            std::cout << "Success fn executed\n";
             callbackExecuted = true;
         },
         handler.printFailure(&Serial),
@@ -154,7 +151,6 @@ unittest(can_execute_chain) {
         3,
         AsyncDuplex::Timing::ANY,
         [&appendedCallbackCalls](MatchState ms) {
-            std::cout << "Executing chain-defined success fn.\n";
             appendedCallbackCalls++;
         }
     );
