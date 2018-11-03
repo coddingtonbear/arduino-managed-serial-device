@@ -7,7 +7,7 @@
 
 #include "AsyncDuplex.h"
 
-#ifdef ASYNC_DUPLEX_DEBUG
+#ifdef ASYNC_DUPLEX_DEBUG_COUT
     #include <iostream>
 #endif
 
@@ -31,8 +31,9 @@ AsyncDuplex::Command::Command(
 
 AsyncDuplex::AsyncDuplex(){}
 
-bool AsyncDuplex::begin(Stream* _stream) {
+bool AsyncDuplex::begin(Stream* _stream, Stream* _errorStream) {
     stream = _stream;
+    errorStream = _errorStream;
     began = true;
 
     // Sublcasses may perform additional actions here that may not
@@ -147,21 +148,8 @@ void AsyncDuplex::createChain(Command* dest, const Command* toChain) {
     std::function<void(MatchState)> originalSuccess = dest->success;
     dest->success = [this, chained, originalSuccess](MatchState ms){
         if(originalSuccess) {
-            #ifdef ASYNC_DUPLEX_DEBUG
-                std::cout << "Executing pre-chain success fn\n";
-            #endif
             originalSuccess(ms);
         }
-        else {
-            #ifdef ASYNC_DUPLEX_DEBUG
-                std::cout << "No pre-chain success fn to execute\n";
-            #endif
-        }
-        #ifdef ASYNC_DUPLEX_DEBUG
-            std::cout << "Queueing chained command: ";
-            std::cout << chained.command;
-            std::cout << "\n";
-        #endif
         AsyncDuplex::asyncExecute(
             &chained,
             Timing::NEXT
@@ -184,16 +172,8 @@ void AsyncDuplex::prependCallback(
     std::function<void(Command*)> _failure
 ) {
     if(_success) {
-        #ifdef ASYNC_DUPLEX_DEBUG
-            std::cout << "Prepending success callback for '";
-            std::cout << cmd->command;
-            std::cout << "'\n";
-        #endif
         std::function<void(MatchState)> originalFn = cmd->success;
         cmd->success = [_success, originalFn](MatchState ms){
-            #ifdef ASYNC_DUPLEX_DEBUG
-                std::cout << "Executing success fn.\n";
-            #endif
             _success(ms);
             if(originalFn) {
                 originalFn(ms);
@@ -201,16 +181,8 @@ void AsyncDuplex::prependCallback(
         };
     }
     if(_failure) {
-        #ifdef ASYNC_DUPLEX_DEBUG
-            std::cout << "Prepending failure callback to '";
-            std::cout << cmd->command;
-            std::cout << "'\n";
-        #endif
         std::function<void(Command*)> originalFn = cmd->failure;
         cmd->failure = [_failure, originalFn](Command* cmd){
-            #ifdef ASYNC_DUPLEX_DEBUG
-                std::cout << "Executing failure fn.\n";
-            #endif
             _failure(cmd);
             if(originalFn) {
                 originalFn(cmd);
@@ -225,7 +197,7 @@ void AsyncDuplex::loop(){
     }
     if(processing && timeout < millis()) {
         #ifdef ASYNC_DUPLEX_DEBUG
-            std::cout << "Command timeout\n";
+            AsyncDuplex::debugMessage("\t <Command Timeout>");
         #endif
 
         Command failedCommand;
@@ -248,11 +220,9 @@ void AsyncDuplex::loop(){
         inputBuffer[bufferPos] = '\0';
 
         #ifdef ASYNC_DUPLEX_DEBUG
-            std::cout << "Input buffer (";
-            std::cout << String(bufferPos);
-            std::cout << ") \"";
-            std::cout << inputBuffer;
-            std::cout << "\"\n";
+            AsyncDuplex::debugMessage(
+                "\t<-- (" + String(bufferPos) + ") \"" + String(inputBuffer) + "\""
+            );
         #endif
 
         if(processing) {
@@ -262,7 +232,7 @@ void AsyncDuplex::loop(){
             char result = ms.Match(commandQueue[0].expectation);
             if(result) {
                 #ifdef ASYNC_DUPLEX_DEBUG
-                    std::cout << "Expectation matched\n";
+                    AsyncDuplex::debugMessage("\t<Expectation Matched>");
                 #endif
 
                 processing=false;
@@ -287,9 +257,7 @@ void AsyncDuplex::loop(){
     }
     if(!processing && queueLength > 0 && commandQueue[0].delay <= millis()) {
         #ifdef ASYNC_DUPLEX_DEBUG
-            std::cout << "Command started: ";
-            std::cout << commandQueue[0].command;
-            std::cout << "\n";
+            AsyncDuplex::debugMessage("\t--> " + String(commandQueue[0].command));
         #endif
         stream->println(commandQueue[0].command);
         stream->flush();
@@ -327,6 +295,34 @@ std::function<void(AsyncDuplex::Command*)> AsyncDuplex::printFailure(Stream* str
         );
     };
 }
+
+void AsyncDuplex::emitErrorMessage(const char *msg) {
+    if(errorStream != NULL) {
+        errorStream->println(msg);
+    }
+}
+
+#ifdef ASYNC_DUPLEX_DEBUG
+void AsyncDuplex::debugMessage(String msg) {
+    #ifdef ASYNC_DUPLEX_DEBUG_COUT
+        std::cout << msg;
+        std::cout << "\n";
+    #endif
+    #ifdef ASYNC_DUPLEX_DEBUG_STREAM
+        AsyncDuplex::emitErrorMessage(msg.c_str());
+    #endif
+}
+
+void AsyncDuplex::debugMessage(const char *msg) {
+    #ifdef ASYNC_DUPLEX_DEBUG_COUT
+        std::cout << msg;
+        std::cout << "\n";
+    #endif
+    #ifdef ASYNC_DUPLEX_DEBUG_STREAM
+        AsyncDuplex::emitErrorMessage(msg);
+    #endif
+}
+#endif
 
 inline int AsyncDuplex::available() {
     return stream->available();

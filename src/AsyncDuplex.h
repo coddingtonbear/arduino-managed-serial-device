@@ -13,7 +13,9 @@
 #define MAX_EXPECTATION_LENGTH 128
 #define COMMAND_TIMEOUT 2500
 
-//#define ASYNC_DUPLEX_DEBUG
+#define ASYNC_DUPLEX_DEBUG
+//#define ASYNC_DUPLEX_DEBUG_COUT
+#define ASYNC_DUPLEX_DEBUG_STREAM
 
 class AsyncDuplex: public Stream {
     public:
@@ -42,7 +44,7 @@ class AsyncDuplex: public Stream {
 
         AsyncDuplex();
 
-        bool begin(Stream*);
+        bool begin(Stream*, Stream* _errorStream=NULL);
         bool wait(uint32_t timeout, std::function<void()> _feed_watchdog=NULL);
         bool asyncExecute(
             const char *_command,
@@ -79,7 +81,7 @@ class AsyncDuplex: public Stream {
         int read();
         int peek();
         void flush();
-    private:
+    protected:
         Command commandQueue[COMMAND_QUEUE_SIZE];
 
         void shiftRight();
@@ -99,6 +101,13 @@ class AsyncDuplex: public Stream {
 
         bool began = false;
         bool processing = false;
+
+        void emitErrorMessage(const char*);
+        #ifdef ASYNC_DUPLEX_DEBUG
+            void debugMessage(String);
+            void debugMessage(const char*);
+        #endif
+        Stream* errorStream;
 
         Stream* stream;
         uint8_t queueLength = 0;
