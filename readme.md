@@ -37,11 +37,11 @@ AsyncDuplex handler = AsyncDuplex();
 void setup() {
     handler.begin(&Serial1);
 
-    AsyncDuplex.asyncExecute("AT");
+    handler.asyncExecute("AT");
 }
 
 void loop() {
-    AsyncDuplex.loop();
+    handler.loop();
 }
 ```
 
@@ -62,18 +62,18 @@ AsyncDuplex handler = AsyncDuplex();
 void setup() {
     handler.begin(&Serial);
 
-    AsyncDuplex.asyncExecute(
+    handler.asyncExecute(
         "AT+CCLK?",
         "+CCLK:.*\n",
     );
-    AsyncDuplex.asyncExecute(
+    handler.asyncExecute(
         "AT+CIPSTATUS",
         "STATE:.*\n"
     );
 }
 
 void loop() {
-    AsyncDuplex.loop();
+    handler.loop();
 }
 ```
 
@@ -103,19 +103,19 @@ AsyncDuplex handler = AsyncDuplex();
 void setup() {
     handler.begin(&Serial);
 
-    AsyncDuplex.asyncExecute(
+    handler.asyncExecute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
         ANY,
-        [](MatchState ms) -> void {
+        [&handler](MatchState ms) -> void {
             Serial.println("Connected");
 
-            AsyncDuplex.asyncExecute(
+            handler.asyncExecute(
                 "AT+CIPSEND",
                 ">",
                 NEXT,
-                [](MatchState ms) -> void {
-                    AsyncDuplex.asyncExecute(
+                [&handler](MatchState ms) -> void {
+                    handler.asyncExecute(
                         "abc\r\n\x1a"
                         "SEND OK\r\n"
                         NEXT,
@@ -128,7 +128,7 @@ void setup() {
 
 
 void loop() {
-    AsyncDuplex.loop();
+    handler.loop();
 }
 ```
 
@@ -181,7 +181,7 @@ void setup() {
 
 
 void loop() {
-    AsyncDuplex.loop();
+    handler.loop();
 }
 ```
 
@@ -200,7 +200,7 @@ void setup() {
 
     // Get the current timestamp
     time_t currentTime;
-    AsyncDuplex.asyncExecute(
+    handler.asyncExecute(
         "AT+CCLK?",
         "+CCLK: \"([%d]+)/([%d]+)/([%d]+),([%d]+):([%d]+):([%d]+)([\\+\\-])([%d]+)\"",
         ANY,
@@ -236,7 +236,7 @@ void setup() {
     );
 
     char connectionStatus[10];
-    AsyncDuplex.asyncExecute(
+    handler.asyncExecute(
         "AT+CIPSTATUS",
         "STATE: (.*)\n"
         ANY,
@@ -247,7 +247,7 @@ void setup() {
 }
 
 void loop() {
-    AsyncDuplex.loop();
+    handler.loop();
 }
 ```
 
@@ -265,27 +265,30 @@ AsyncDuplex handler = AsyncDuplex();
 
 void setup() {
     handler.begin(&Serial);
-
-    AsyncDuplex.asyncExecute(
+    handler.asyncExecute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
         ANY,
         [](MatchState ms) -> void {
             Serial.println("Connected");
         },
-        []() -> void {  // Run this function on failure
-            Serial.println("Connection failed");
+        [&handler](AsyncDuplex::Command* cmd) -> void {  // Run this function on failure
+            Serial.println("Connection failed; retrying");
+
+            // Retry this immediately
+            handler.asyncExecute(cmd, AsyncDuplex::Timing::NEXT);
         }
     );
 }
 
 void loop() {
-    AsyncDuplex.loop();
+    handler.loop();
 }
 ```
 
 You can pass a second function parameter to be executed should the request
-timeout.
+timeout.  If you would like to retry the command (and subsequent commands
+chained with it), you are able to do so.
 
 ### Timeouts
 
@@ -300,8 +303,7 @@ AsyncDuplex handler = AsyncDuplex();
 
 void setup() {
     handler.begin(&Serial);
-
-    AsyncDuplex.asyncExecute(
+    handler.asyncExecute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
         ANY,
@@ -312,7 +314,7 @@ void setup() {
 }
 
 void loop() {
-    AsyncDuplex.loop();
+    handler.loop();
 }
 ```
 
@@ -357,6 +359,6 @@ void setup() {
 
 
 void loop() {
-    AsyncDuplex.loop();
+    handler.loop();
 }
 ```

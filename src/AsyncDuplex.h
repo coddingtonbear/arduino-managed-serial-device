@@ -22,7 +22,7 @@ class AsyncDuplex: public Stream {
             char command[MAX_COMMAND_LENGTH];
             char expectation[MAX_EXPECTATION_LENGTH];
             std::function<void(MatchState)> success;
-            std::function<void()> failure;
+            std::function<void(Command*)> failure;
             uint16_t timeout;
             uint32_t delay;
 
@@ -31,7 +31,7 @@ class AsyncDuplex: public Stream {
                 const char* _cmd,
                 const char* _expect,
                 std::function<void(MatchState)> _success = NULL,
-                std::function<void()> _failure = NULL,
+                std::function<void(Command*)> _failure = NULL,
                 uint16_t _timeout = COMMAND_TIMEOUT,
                 uint32_t _delay = 0
             );
@@ -45,7 +45,7 @@ class AsyncDuplex: public Stream {
             const char *_expectation = "",
             Timing _timing = Timing::ANY,
             std::function<void(MatchState)> _success = NULL,
-            std::function<void()> _failure = NULL,
+            std::function<void(Command*)> _failure = NULL,
             uint16_t _timeout = COMMAND_TIMEOUT,
             uint32_t _delay = 0
         );

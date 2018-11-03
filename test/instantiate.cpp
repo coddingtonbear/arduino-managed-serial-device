@@ -68,7 +68,7 @@ unittest(can_fail_expectation) {
             std::cout << "Success fn executed\n";
             callbackExecuted = true;
         },
-        [&failureCallbackExecuted]() {
+        [&failureCallbackExecuted](AsyncDuplex::Command* cmd) {
             std::cout << "Failure fn executed\n";
             failureCallbackExecuted = true;
         },

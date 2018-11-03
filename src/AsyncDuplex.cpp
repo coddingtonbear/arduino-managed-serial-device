@@ -11,7 +11,7 @@ AsyncDuplex::Command::Command(
     const char* _cmd,
     const char* _expect,
     std::function<void(MatchState)> _success,
-    std::function<void()> _failure,
+    std::function<void(Command*)> _failure,
     uint16_t _timeout,
     uint32_t _delay
 ) {
@@ -36,7 +36,7 @@ bool AsyncDuplex::asyncExecute(
     const char *_expectation,
     AsyncDuplex::Timing _timing,
     std::function<void(MatchState)> _success,
-    std::function<void()> _failure,
+    std::function<void(Command*)> _failure,
     uint16_t _timeout,
     uint32_t _delay
 ) {
@@ -150,16 +150,24 @@ void AsyncDuplex::loop(){
         return;
     }
     if(processing && timeout < millis()) {
-        std::function<void()> fn = commandQueue[0].failure;
-        if(fn) {
-            fn();
-        }
-        shiftLeft();
-        inputBuffer[0] = '\0';
-        processing=false;
         #ifdef ASYNC_DUPLEX_DEBUG
             std::cout << "Command timeout\n";
         #endif
+
+        Command failedCommand;
+        AsyncDuplex::copyCommand(&failedCommand, &commandQueue[0]);
+        shiftLeft();
+        inputBuffer[0] = '\0';
+        processing=false;
+
+        std::function<void(Command*)> fn = failedCommand.failure;
+        if(fn) {
+            // Clear delay settings before handing to error
+            // handler callback to prevent erroneously delaying
+            // for forty years if the error handler tries to retry
+            failedCommand.delay = 0;
+            fn(&failedCommand);
+        }
     }
     while(stream->available()) {
         inputBuffer[bufferPos++] = stream->read();
