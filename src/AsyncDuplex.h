@@ -40,6 +40,7 @@ class AsyncDuplex: public Stream {
         AsyncDuplex();
 
         void begin(Stream*);
+        void wait();
         bool asyncExecute(
             const char *_command,
             const char *_expectation = "",

@@ -30,6 +30,12 @@ void AsyncDuplex::begin(Stream* _stream) {
     began = true;
 }
 
+void AsyncDuplex::wait() {
+    while(queueLength > 0) {
+        loop();
+    }
+}
+
 bool AsyncDuplex::asyncExecute(
     const char *_command,
     const char *_expectation,
