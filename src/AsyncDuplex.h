@@ -42,7 +42,7 @@ class AsyncDuplex: public Stream {
         void begin(Stream*);
         bool asyncExecute(
             const char *_command,
-            const char *_expectation,
+            const char *_expectation = "",
             Timing _timing = Timing::ANY,
             std::function<void(MatchState)> _success = NULL,
             std::function<void()> _failure = NULL,

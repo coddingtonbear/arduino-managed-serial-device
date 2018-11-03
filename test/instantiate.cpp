@@ -3,6 +3,22 @@
 #include <ArduinoUnitTests.h>
 #include "../src/AsyncDuplex.h"
 
+unittest(simple) {
+    GodmodeState* state = GODMODE();
+    state->resetPorts();
+
+    bool callbackExecuted = false;
+
+    AsyncDuplex handler = AsyncDuplex();
+    handler.begin(&Serial);
+    handler.asyncExecute("TEST");
+    handler.loop();
+
+    assertEqual(
+        "TEST\r\n",
+        state->serialPort[0].dataOut
+    );
+}
 
 unittest(can_resolve_expectation) {
     GodmodeState* state = GODMODE();

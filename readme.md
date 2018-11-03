@@ -1,7 +1,16 @@
 # Arduino Async Duplex
 
-Asynchronously interact with any serial device having a call-and-response
-style interface.
+This library allows you to asynchronously interact with any serial device
+having a call-and-response style interface.
+
+If you've ever used one of the many modem-handling libraries that exist,
+you're familiar with the frustration that is waiting for a response from
+a long-running command.  Between sending your command and receiving a
+response (or worse -- that command timing out), your program is halted,
+and your microcontroller is wasiting valuable cycles.  This library
+aims to fix that problem by allowing you to queue commands that will
+be asynchronously sent to your device without blocking your
+microcontroller loop.
 
 ## Requirements
 
@@ -10,6 +19,30 @@ style interface.
 ## Examples
 
 The following examples are based upon interactions with a SIM7000 LTE modem.
+
+### Simple
+
+Sending a command is as easy as queueing it:
+
+```c++
+#include <AsyncDuplex.h>
+#include <Regexp.h>
+
+AsyncDuplex handler = AsyncDuplex();
+
+void setup() {
+    handler.begin(&Serial1);
+
+    AsyncDuplex.asyncExecute("AT");
+}
+
+void loop() {
+    AsyncDuplex.loop();
+}
+```
+
+But that isn't much more useful than just writing to the stream directly;
+for more useful applications, keep reading.
 
 ### Sequential
 
@@ -25,51 +58,13 @@ AsyncDuplex handler = AsyncDuplex();
 void setup() {
     handler.begin(&Serial);
 
-    // Get the current timestamp
-    time_t currentTime;
     AsyncDuplex.asyncExecute(
         "AT+CCLK?",
-        "+CCLK: \"([%d]+)/([%d]+)/([%d]+),([%d]+):([%d]+):([%d]+)([\\+\\-])([%d]+)\"",
-        ANY,
-        [&currentTime](MatchState ms) {
-            char year_str[3];
-            char month_str[3];
-            char day_str[3];
-            char hour_str[3];
-            char minute_str[3];
-            char second_str[3];
-            char zone_dir_str[2];
-            char zone_str[3];
-
-            ms.GetCapture(year_str, 0);
-            ms.GetCapture(month_str, 1);
-            ms.GetCapture(day_str, 2);
-            ms.GetCapture(hour_str, 3);
-            ms.GetCapture(minute_str, 4);
-            ms.GetCapture(second_str, 5);
-            ms.GetCapture(zone_dir_str, 6);
-            ms.GetCapture(zone_str, 7);
-
-            tmElements_t timeEts;
-            timeEts.Hour = atoi(hour_str);
-            timeEts.Minute = atoi(minute_str);
-            timeEts.Second = atoi(second_str);
-            timeEts.Day = atoi(day_str);
-            timeEts.Month = atoi(month_str);
-            timeEts.Year = (2000 + atoi(year_str)) - 1970;
-
-            currentTime = makeTime(timeEts);
-        }
+        "+CCLK:.*\n",
     );
-
-    char connectionStatus[10];
     AsyncDuplex.asyncExecute(
         "AT+CIPSTATUS",
-        "STATE: (.*)\n"
-        ANY,
-        [&connectionStatus](MatchState ms) {
-            ms.GetCapture(connectionStatus, 0);
-        }
+        "STATE:.*\n"
     );
 }
 
@@ -140,8 +135,8 @@ a SIM7000 LTE modem.
 2. Send `AT+CIPSEND...`; wait for a `>` to be printed.
 3. Send the data you want to send followed by CTRL+Z (`\x1a`).
 
-The above commands will be executed sequentially and should any task's
-expectations not be met, subsequent tasks will not be executed.
+The above commands will be executed sequentially and should any command's
+expectations not be met, subsequent commands will not be executed.
 
 ### Chaining
 
@@ -187,3 +182,177 @@ void loop() {
 ```
 
 This is identical in function to the "Nested Callbacks" example above.
+
+### Capture Groups
+
+```c++
+#include <AsyncDuplex.h>
+#include <Regexp.h>
+
+AsyncDuplex handler = AsyncDuplex();
+
+void setup() {
+    handler.begin(&Serial);
+
+    // Get the current timestamp
+    time_t currentTime;
+    AsyncDuplex.asyncExecute(
+        "AT+CCLK?",
+        "+CCLK: \"([%d]+)/([%d]+)/([%d]+),([%d]+):([%d]+):([%d]+)([\\+\\-])([%d]+)\"",
+        ANY,
+        [&currentTime](MatchState ms) {
+            char year_str[3];
+            char month_str[3];
+            char day_str[3];
+            char hour_str[3];
+            char minute_str[3];
+            char second_str[3];
+            char zone_dir_str[2];
+            char zone_str[3];
+
+            ms.GetCapture(year_str, 0);
+            ms.GetCapture(month_str, 1);
+            ms.GetCapture(day_str, 2);
+            ms.GetCapture(hour_str, 3);
+            ms.GetCapture(minute_str, 4);
+            ms.GetCapture(second_str, 5);
+            ms.GetCapture(zone_dir_str, 6);
+            ms.GetCapture(zone_str, 7);
+
+            tmElements_t timeEts;
+            timeEts.Hour = atoi(hour_str);
+            timeEts.Minute = atoi(minute_str);
+            timeEts.Second = atoi(second_str);
+            timeEts.Day = atoi(day_str);
+            timeEts.Month = atoi(month_str);
+            timeEts.Year = (2000 + atoi(year_str)) - 1970;
+
+            currentTime = makeTime(timeEts);
+        }
+    );
+
+    char connectionStatus[10];
+    AsyncDuplex.asyncExecute(
+        "AT+CIPSTATUS",
+        "STATE: (.*)\n"
+        ANY,
+        [&connectionStatus](MatchState ms) {
+            ms.GetCapture(connectionStatus, 0);
+        }
+    );
+}
+
+void loop() {
+    AsyncDuplex.loop();
+}
+```
+
+The above will execute the relevant commands and, when the response
+is received, set local variables using captured data.
+
+
+### Failure Handling
+
+```c++
+#include <AsyncDuplex.h>
+#include <Regexp.h>
+
+AsyncDuplex handler = AsyncDuplex();
+
+void setup() {
+    handler.begin(&Serial);
+
+    AsyncDuplex.asyncExecute(
+        "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
+        "OK\r\n",  // Expectation regex
+        ANY,
+        [](MatchState ms) -> void {
+            Serial.println("Connected");
+        },
+        []() -> void {  // Run this function on failure
+            Serial.println("Connection failed");
+        }
+    );
+}
+
+void loop() {
+    AsyncDuplex.loop();
+}
+```
+
+You can pass a second function parameter to be executed should the request
+timeout.
+
+### Timeouts
+
+By default, commands time out after 2.5s (see `COMMAND_TIMEOUT`); sometimes
+you may need to run a command that needs extra time to complete:
+
+```c++
+#include <AsyncDuplex.h>
+#include <Regexp.h>
+
+AsyncDuplex handler = AsyncDuplex();
+
+void setup() {
+    handler.begin(&Serial);
+
+    AsyncDuplex.asyncExecute(
+        "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
+        "OK\r\n",  // Expectation regex
+        ANY,
+        NULL,
+        NULL,
+        10000  // Extended Timeout
+    );
+}
+
+void loop() {
+    AsyncDuplex.loop();
+}
+```
+
+### Delaying
+
+Occasionally, especially when chaining commands, you may need to ensure
+that a subsequent command isn't executed immediately; in these cases,
+you are able to set a delay:
+
+```c++
+#include <AsyncDuplex.h>
+#include <Regexp.h>
+
+AsyncDuplex handler = AsyncDuplex();
+
+void setup() {
+    handler.begin(&Serial);
+
+    AsyncDuplex::Command commands[] = {
+        AsyncDuplex::Command(
+            "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
+            "OK\r\n",  // Expectation regex
+            [](MatchState ms){
+                Serial.println("Connected");
+            }
+        },
+        AsyncDuplex::Command(
+            "AT+CIPSEND",
+            ">",
+            NULL,
+            NULL,
+            COMMAND_TIMEOUT,
+            1000  // Wait for 1s before running this command 
+        ),
+        AsyncDuplex::Command(
+            "abc\r\n\x1a"
+            "SEND OK\r\n"
+        )
+    }
+    handler.asyncExecuteChain(commands, 3);
+}
+
+
+void loop() {
+    AsyncDuplex.loop();
+}
+```
