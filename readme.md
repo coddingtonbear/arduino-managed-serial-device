@@ -13,16 +13,18 @@ The following examples are based upon interactions with a SIM7000 LTE modem.
 
 ### Sequential
 
-When executing three independent commands, you can follow the below
+When executing multiple independent commands, you can follow the below
 pattern:
 
 ```c++
 #include <AsyncDuplex.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex(&Serial);
+AsyncDuplex handler = AsyncDuplex();
 
 void setup() {
+    handler.begin(&Serial);
+
     // Get the current timestamp
     time_t currentTime;
     AsyncDuplex.asyncExecute(
@@ -76,18 +78,18 @@ void loop() {
 }
 ```
 
-This pattern will work fine for independent tasks like the above, but
-for a few reasons, this isn't the recommended pattern to follow for
-sequential related steps:
+This pattern will work great for independent commands like the above, but
+for a few reasons this isn't the recommended pattern to follow for
+sequential steps that are dependent upon one another:
 
-1. If one of these tasks' expectations are not met (i.e. `AT+CIPSTART`
+1. If one of these commands' expectations are not met (i.e. `AT+CIPSTART`
    in the examples below returns `ERROR` instead of `OK`), the subsequent
-   tasks will still be executed.
+   commands will still be executed.
 2. No guarantee is made that these will be executed sequentially.  More
    commands could be queued and inserted between the above commands if
    another function queues a high-priority (`AsyncDuplex::Timing::NEXT`)
    command.
-2. There are a limited number of independent queue slots (by default: 3,
+3. There are a limited number of independent queue slots (by default: 3,
    but this value can be adjusted by changing `COMMAND_QUEUE_SIZE`).
 
 
@@ -97,9 +99,11 @@ sequential related steps:
 #include <AsyncDuplex.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex(&Serial);
+AsyncDuplex handler = AsyncDuplex();
 
 void setup() {
+    handler.begin(&Serial);
+
     AsyncDuplex.asyncExecute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
@@ -133,13 +137,11 @@ This is a simplified overview of connecting to a TCP server using
 a SIM7000 LTE modem.
 
 1. Send `AT+CIPSTART...`; wait for `OK` followed by the line ending.
-2. Send `AT+CIPSEND...`; wait for a `>` to be printed.  Ensure that
-   this is the next command executed.
-3. Send the data you want to send followed by CTRL+Z (`\x1a`).  Ensure
-   that this is the next command executed.
+2. Send `AT+CIPSEND...`; wait for a `>` to be printed.
+3. Send the data you want to send followed by CTRL+Z (`\x1a`).
 
-If at any point the expectation cannot be met, the chain of actions will
-be aborted.
+The above commands will be executed sequentially and should any task's
+expectations not be met, subsequent tasks will not be executed.
 
 ### Chaining
 
@@ -153,9 +155,11 @@ of handling these:
 #include <AsyncDuplex.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex(&Serial);
+AsyncDuplex handler = AsyncDuplex();
 
 void setup() {
+    handler.begin(&Serial);
+
     AsyncDuplex::Command commands[] = {
         AsyncDuplex::Command(
             "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command

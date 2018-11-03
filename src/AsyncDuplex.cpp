@@ -23,7 +23,12 @@ AsyncDuplex::Command::Command(
     delay = _delay;
 }
 
-AsyncDuplex::AsyncDuplex(Stream* _stream): stream(_stream) {
+AsyncDuplex::AsyncDuplex(){
+}
+
+void AsyncDuplex::begin(Stream* _stream) {
+    stream = _stream;
+    began = true;
 }
 
 bool AsyncDuplex::asyncExecute(
@@ -141,6 +146,9 @@ void AsyncDuplex::copyCommand(Command* dest, const Command* src) {
 }
 
 void AsyncDuplex::loop(){
+    if(!began) {
+        return;
+    }
     if(processing && timeout < millis()) {
         std::function<void()> fn = commandQueue[0].failure;
         if(fn) {
@@ -227,4 +235,24 @@ void AsyncDuplex::shiftLeft() {
         AsyncDuplex::copyCommand(&commandQueue[i-1], &commandQueue[i]);
     }
     queueLength--;
+}
+
+inline int AsyncDuplex::available() {
+    return stream->available();
+}
+
+inline size_t AsyncDuplex::write(uint8_t bt) {
+    return stream->write(bt);
+}
+
+inline int AsyncDuplex::read() {
+    return stream->read();
+}
+
+inline int AsyncDuplex::peek() {
+    return stream->peek();
+}
+
+inline void AsyncDuplex::flush() {
+    return stream->flush();
 }

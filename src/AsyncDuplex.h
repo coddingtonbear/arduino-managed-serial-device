@@ -12,7 +12,7 @@
 
 //#define ASYNC_DUPLEX_DEBUG
 
-class AsyncDuplex {
+class AsyncDuplex: public Stream {
     public:
         enum Timing{
             NEXT,
@@ -37,8 +37,9 @@ class AsyncDuplex {
             );
         };
 
-        AsyncDuplex(Stream*);
+        AsyncDuplex();
 
+        void begin(Stream*);
         bool asyncExecute(
             const char *_command,
             const char *_expectation,
@@ -62,6 +63,13 @@ class AsyncDuplex {
 
         uint8_t getQueueLength();
         void getResponse(char*, uint16_t);
+
+        // Stream
+        int available();
+        size_t write(uint8_t);
+        int read();
+        int peek();
+        void flush();
     private:
         Command commandQueue[COMMAND_QUEUE_SIZE];
 
@@ -75,6 +83,7 @@ class AsyncDuplex {
         uint16_t bufferPos = 0;
         uint16_t timeout = 0;
 
+        bool began = false;
         bool processing = false;
 
         Stream* stream;

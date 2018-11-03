@@ -10,7 +10,8 @@ unittest(can_resolve_expectation) {
 
     bool callbackExecuted = false;
 
-    AsyncDuplex handler = AsyncDuplex(&Serial);
+    AsyncDuplex handler = AsyncDuplex();
+    handler.begin(&Serial);
     handler.asyncExecute(
         "TEST",
         "OK",
@@ -41,7 +42,8 @@ unittest(can_fail_expectation) {
     bool callbackExecuted = false;
     bool failureCallbackExecuted = false;
 
-    AsyncDuplex handler = AsyncDuplex(&Serial);
+    AsyncDuplex handler = AsyncDuplex();
+    handler.begin(&Serial);
     handler.asyncExecute(
         "TEST",
         "OK",
@@ -78,7 +80,8 @@ unittest(can_execute_from_object) {
         "TEST",
         "XYZ"
     );
-    AsyncDuplex handler = AsyncDuplex(&Serial);
+    AsyncDuplex handler = AsyncDuplex();
+    handler.begin(&Serial);
     handler.asyncExecute(&cmd);
 
     handler.loop();
@@ -98,7 +101,8 @@ unittest(can_execute_chain) {
         AsyncDuplex::Command("TEST2", "OK"),
         AsyncDuplex::Command("TEST3", "OK")
     };
-    AsyncDuplex handler = AsyncDuplex(&Serial);
+    AsyncDuplex handler = AsyncDuplex();
+    handler.begin(&Serial);
     handler.asyncExecuteChain(commands, 3);
 
     handler.loop();
@@ -131,7 +135,8 @@ unittest(can_return_match_groups) {
 
     char matchGroupResult[10] = {'\0'};
 
-    AsyncDuplex handler = AsyncDuplex(&Serial);
+    AsyncDuplex handler = AsyncDuplex();
+    handler.begin(&Serial);
     handler.asyncExecute(
         "TEST",
         "OK%[([%d]+)%]",
