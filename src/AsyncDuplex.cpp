@@ -272,6 +272,7 @@ void AsyncDuplex::loop(){
             std::cout << "\n";
         #endif
         stream->println(commandQueue[0].command);
+        stream->flush();
         processing = true;
         timeout = millis() + commandQueue[0].timeout;
     }
