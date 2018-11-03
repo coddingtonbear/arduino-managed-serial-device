@@ -101,7 +101,7 @@ a SIM7000 LTE modem.
 2. Send `AT+CIPSEND...`; wait for a `>` to be printed.
 3. Send the data you want to send followed by CTRL+Z (`\x1a`).
 
-The above commands will be executed sequentially and should any command's
+The below commands will be executed sequentially and should any command's
 expectations not be met, subsequent commands will not be executed.
 
 ```c++
