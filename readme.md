@@ -14,6 +14,10 @@ microcontroller loop.
 
 ## Requirements
 
+* std::functional: This is available in the standard library for most
+  non-AVR Arduino cores, but should you be attempting to use this
+  on an AVR microcontroller (e.g. an atmega328p), you may find what you
+  need in this repository: https://github.com/SGSSGene/StandardCplusplus
 * Regexp (https://github.com/nickgammon/Regexp)
 
 ## Examples
