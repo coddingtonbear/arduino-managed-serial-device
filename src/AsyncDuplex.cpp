@@ -25,9 +25,13 @@ AsyncDuplex::Command::Command(
 
 AsyncDuplex::AsyncDuplex(){}
 
-void AsyncDuplex::begin(Stream* _stream) {
+bool AsyncDuplex::begin(Stream* _stream) {
     stream = _stream;
     began = true;
+
+    // Sublcasses may perform additional actions here that may not
+    // be successful; in this base class' case, this isn't variable
+    return true;
 }
 
 bool AsyncDuplex::wait(uint32_t timeout, std::function<void()> feed_watchdog) {
