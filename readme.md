@@ -48,7 +48,7 @@ void loop() {
 But that isn't much more useful than just writing to the stream directly;
 for more useful applications, keep reading.
 
-### Sequential
+### Independent
 
 When executing multiple independent commands, you can follow the below
 pattern:
@@ -92,7 +92,7 @@ sequential steps that are dependent upon one another:
    but this value can be adjusted by changing `COMMAND_QUEUE_SIZE`).
 
 
-### Nested Callbacks
+### Sequential (Nested Callbacks)
 
 This is a simplified overview of connecting to a TCP server using
 a SIM7000 LTE modem.
@@ -142,7 +142,7 @@ void loop() {
 }
 ```
 
-### Chaining
+### Sequential (Chained)
 
 Most of the time, you probably just want to run a few commands in sequence,
 and the callback structure above may become tedious.  For sequential commands
@@ -185,7 +185,59 @@ void loop() {
 }
 ```
 
-This is identical in function to the "Nested Callbacks" example above.
+The above is identical in function to the "Nested Callbacks" example earlier,
+but using this pattern allows you define callbacks that are automatically
+prepended to any callback that might have originally been defined for every
+member of the chain:
+
+```c++
+#include <AsyncDuplex.h>
+#include <Regexp.h>
+
+AsyncDuplex handler = AsyncDuplex();
+
+void setup() {
+    handler.begin(&Serial);
+
+    AsyncDuplex::Command commands[] = {
+        AsyncDuplex::Command(
+            "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
+            "OK\r\n",  // Expectation regex
+            [](MatchState ms){
+                Serial.println("Connected");
+            }
+        },
+        AsyncDuplex::Command(
+            "AT+CIPSEND",
+            ">",
+        ),
+        AsyncDuplex::Command(
+            "abc\r\n\x1a"
+            "SEND OK\r\n"
+        )
+    }
+    handler.asyncExecuteChain(
+        commands,
+        3,
+        [](MatchState ms) { // Common success function
+            // This will cause a message to be printed
+            // after the completion of every command in the chain
+            Serial1.println("Success!");
+        },
+        [](Command*) { // Common failure function
+            // This will cause a message to be printed
+            // after any member of the chain fails; this
+            // might be a good place to put retry logic!
+            Serial1.println("Failed!");
+        }
+    );
+}
+
+
+void loop() {
+    handler.loop();
+}
+```
 
 ### Capture Groups
 

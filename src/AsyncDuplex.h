@@ -83,7 +83,7 @@ class AsyncDuplex: public Stream {
 
         void copyCommand(Command*, const Command*);
         void createChain(Command*, const Command*);
-        void appendCallback(
+        void prependCallback(
             Command*,
             std::function<void(MatchState)> _success = NULL,
             std::function<void(Command*)> _failure = NULL

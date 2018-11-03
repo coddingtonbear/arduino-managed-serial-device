@@ -87,14 +87,14 @@ bool AsyncDuplex::asyncExecuteChain(
 
     Command scratch;
     Command chain = cmdArray[count - 1];
-    AsyncDuplex::appendCallback(&chain, _success, _failure);
+    AsyncDuplex::prependCallback(&chain, _success, _failure);
 
     for(int16_t i = count - 2; i >= 0; i--) {
         AsyncDuplex::copyCommand(
             &scratch,
             &cmdArray[i]
         );
-        AsyncDuplex::appendCallback(&scratch, _success, _failure);
+        AsyncDuplex::prependCallback(&scratch, _success, _failure);
         AsyncDuplex::createChain(
             &scratch,
             &chain
@@ -148,14 +148,14 @@ void AsyncDuplex::copyCommand(Command* dest, const Command* src) {
     dest->delay = src->delay;
 }
 
-void AsyncDuplex::appendCallback(
+void AsyncDuplex::prependCallback(
     Command* cmd, 
     std::function<void(MatchState)> _success,
     std::function<void(Command*)> _failure
 ) {
     if(_success) {
         #ifdef ASYNC_DUPLEX_DEBUG
-            std::cout << "Appending success callback for '";
+            std::cout << "Prepending success callback for '";
             std::cout << cmd->command;
             std::cout << "'\n";
         #endif
@@ -164,15 +164,15 @@ void AsyncDuplex::appendCallback(
             #ifdef ASYNC_DUPLEX_DEBUG
                 std::cout << "Executing success fn.\n";
             #endif
+            _success(ms);
             if(originalFn) {
                 originalFn(ms);
             }
-            _success(ms);
         };
     }
     if(_failure) {
         #ifdef ASYNC_DUPLEX_DEBUG
-            std::cout << "Appending failure callback to '";
+            std::cout << "Prepending failure callback to '";
             std::cout << cmd->command;
             std::cout << "'\n";
         #endif
@@ -181,10 +181,10 @@ void AsyncDuplex::appendCallback(
             #ifdef ASYNC_DUPLEX_DEBUG
                 std::cout << "Executing failure fn.\n";
             #endif
+            _failure(cmd);
             if(originalFn) {
                 originalFn(cmd);
             }
-            _failure(cmd);
         };
     }
 }
