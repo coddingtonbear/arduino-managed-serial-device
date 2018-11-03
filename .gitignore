@@ -1,0 +1,4 @@
+.vscode/*
+Gemfile.lock
+*.tar.xz
+*.bin

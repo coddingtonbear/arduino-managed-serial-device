@@ -1,0 +1,11 @@
+compile:
+  libraries:
+    - "Regexp"
+  platforms:
+    - uno
+
+unittest:
+  libraries:
+    - "Regexp"
+  platforms:
+    - uno
