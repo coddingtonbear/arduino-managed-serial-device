@@ -39,6 +39,10 @@ bool AsyncDuplex::asyncExecute(
     uint16_t _timeout,
     uint32_t _delay
 ) {
+    if(queueLength == COMMAND_QUEUE_SIZE) {
+        return false;
+    }
+
     uint8_t position = 0;
     if(_timing == ANY) {
         position = queueLength;
@@ -104,7 +108,7 @@ bool AsyncDuplex::asyncExecuteChain(
             &scratch
         );
     }
-    AsyncDuplex::asyncExecute(
+    return AsyncDuplex::asyncExecute(
         &chain,
         _timing
     );
