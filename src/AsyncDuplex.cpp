@@ -23,8 +23,7 @@ AsyncDuplex::Command::Command(
     delay = _delay;
 }
 
-AsyncDuplex::AsyncDuplex(){
-}
+AsyncDuplex::AsyncDuplex(){}
 
 void AsyncDuplex::begin(Stream* _stream) {
     stream = _stream;
@@ -243,6 +242,15 @@ void AsyncDuplex::shiftLeft() {
         AsyncDuplex::copyCommand(&commandQueue[i-1], &commandQueue[i]);
     }
     queueLength--;
+}
+
+std::function<void(AsyncDuplex::Command*)> AsyncDuplex::printFailure(Stream* stream) {
+    return [stream](AsyncDuplex::Command* cmd) {
+        std::cout << "I'm in the output";
+        stream->println(
+            "Command '" + String(cmd->command) + "' failed."
+        );
+    };
 }
 
 inline int AsyncDuplex::available() {

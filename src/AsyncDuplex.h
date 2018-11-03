@@ -64,6 +64,9 @@ class AsyncDuplex: public Stream {
         uint8_t getQueueLength();
         void getResponse(char*, uint16_t);
 
+        // Helper functions
+        std::function<void(Command*)> printFailure(Stream*);
+
         // Stream
         int available();
         size_t write(uint8_t);

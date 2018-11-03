@@ -289,6 +289,33 @@ void loop() {
 }
 ```
 
+If you only want to print to the console that an error occurred, you can
+use the `AsyncDuplex::printFailure` helper:
+
+```c++
+#include <AsyncDuplex.h>
+#include <Regexp.h>
+
+AsyncDuplex handler = AsyncDuplex();
+
+void setup() {
+    handler.begin(&Serial);
+    handler.asyncExecute(
+        "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
+        "OK\r\n",  // Expectation regex
+        ANY,
+        [](MatchState ms) -> void {
+            Serial.println("Connected");
+        },
+        AsyncDuplex::printFailure(&Serial1), // Will print "Command 'AT+CIPSTART...' failed."
+    );
+}
+
+void loop() {
+    handler.loop();
+}
+```
+
 ### Timeouts
 
 By default, commands time out after 2.5s (see `COMMAND_TIMEOUT`); sometimes

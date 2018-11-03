@@ -50,7 +50,6 @@ unittest(can_resolve_expectation) {
     assertTrue(callbackExecuted);
 }
 
-
 unittest(can_fail_expectation) {
     GodmodeState* state = GODMODE();
     state->resetPorts();
@@ -86,6 +85,35 @@ unittest(can_fail_expectation) {
     handler.loop();
     assertFalse(callbackExecuted);
     assertTrue(failureCallbackExecuted);
+}
+
+unittest(can_fail_expectation_with_display) {
+    GodmodeState* state = GODMODE();
+    state->resetPorts();
+
+    bool callbackExecuted = false;
+    bool failureCallbackExecuted = false;
+
+    AsyncDuplex handler = AsyncDuplex();
+    handler.begin(&Serial);
+    handler.asyncExecute(
+        "TEST",
+        "OK",
+        AsyncDuplex::NEXT,
+        [&callbackExecuted](MatchState ms) {
+            std::cout << "Success fn executed\n";
+            callbackExecuted = true;
+        },
+        handler.printFailure(&Serial),
+        0
+    );
+    handler.loop();
+    state->micros = state->micros + 100000;
+    handler.loop();
+    assertEqual(
+        "TEST\r\nCommand 'TEST' failed.\r\n",
+        state->serialPort[0].dataOut
+    );
 }
 
 unittest(can_execute_from_object) {
