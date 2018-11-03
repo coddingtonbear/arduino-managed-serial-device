@@ -94,6 +94,16 @@ sequential steps that are dependent upon one another:
 
 ### Nested Callbacks
 
+This is a simplified overview of connecting to a TCP server using
+a SIM7000 LTE modem.
+
+1. Send `AT+CIPSTART...`; wait for `OK` followed by the line ending.
+2. Send `AT+CIPSEND...`; wait for a `>` to be printed.
+3. Send the data you want to send followed by CTRL+Z (`\x1a`).
+
+The above commands will be executed sequentially and should any command's
+expectations not be met, subsequent commands will not be executed.
+
 ```c++
 #include <AsyncDuplex.h>
 #include <Regexp.h>
@@ -131,16 +141,6 @@ void loop() {
     handler.loop();
 }
 ```
-
-This is a simplified overview of connecting to a TCP server using
-a SIM7000 LTE modem.
-
-1. Send `AT+CIPSTART...`; wait for `OK` followed by the line ending.
-2. Send `AT+CIPSEND...`; wait for a `>` to be printed.
-3. Send the data you want to send followed by CTRL+Z (`\x1a`).
-
-The above commands will be executed sequentially and should any command's
-expectations not be met, subsequent commands will not be executed.
 
 ### Chaining
 
@@ -188,6 +188,9 @@ void loop() {
 This is identical in function to the "Nested Callbacks" example above.
 
 ### Capture Groups
+
+The below example will execute the relevant commands and, when the response
+is received, set local variables using captured data.
 
 ```c++
 #include <AsyncDuplex.h>
@@ -251,11 +254,11 @@ void loop() {
 }
 ```
 
-The above will execute the relevant commands and, when the response
-is received, set local variables using captured data.
-
-
 ### Failure Handling
+
+You can pass a second function parameter to be executed should the request
+timeout.  If you would like to retry the command (and subsequent commands
+chained with it), you are able to do so.
 
 ```c++
 #include <AsyncDuplex.h>
@@ -285,10 +288,6 @@ void loop() {
     handler.loop();
 }
 ```
-
-You can pass a second function parameter to be executed should the request
-timeout.  If you would like to retry the command (and subsequent commands
-chained with it), you are able to do so.
 
 ### Timeouts
 
