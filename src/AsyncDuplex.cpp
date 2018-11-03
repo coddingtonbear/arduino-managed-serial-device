@@ -1,9 +1,15 @@
+#include <functional>
+
 #include <Arduino.h>
+#undef min
+#undef max
 #include <Regexp.h>
 
-#include <iostream>
-
 #include "AsyncDuplex.h"
+
+#ifdef ASYNC_DUPLEX_DEBUG
+    #include <iostream>
+#endif
 
 AsyncDuplex::Command::Command() {}
 
@@ -99,7 +105,7 @@ bool AsyncDuplex::asyncExecute(
 }
 
 bool AsyncDuplex::asyncExecuteChain(
-    Command* cmdArray,
+    const Command* cmdArray,
     uint16_t count,
     Timing _timing,
     std::function<void(MatchState)> _success,
@@ -316,7 +322,6 @@ void AsyncDuplex::shiftLeft() {
 
 std::function<void(AsyncDuplex::Command*)> AsyncDuplex::printFailure(Stream* stream) {
     return [stream](AsyncDuplex::Command* cmd) {
-        std::cout << "I'm in the output";
         stream->println(
             "Command '" + String(cmd->command) + "' failed."
         );

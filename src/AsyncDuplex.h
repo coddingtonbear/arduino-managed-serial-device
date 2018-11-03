@@ -1,8 +1,11 @@
 #pragma once
 
-#include <Arduino.h>
-#include <Regexp.h>
 #include <functional>
+
+#include <Arduino.h>
+#undef min
+#undef max
+#include <Regexp.h>
 
 #define COMMAND_QUEUE_SIZE 3
 #define INPUT_BUFFER_LENGTH 256
@@ -55,7 +58,7 @@ class AsyncDuplex: public Stream {
             Timing _timing = Timing::ANY
         );
         bool asyncExecuteChain(
-            Command*,
+            const Command*,
             uint16_t count,
             Timing _timing = Timing::ANY,
             std::function<void(MatchState)> _success = NULL,
