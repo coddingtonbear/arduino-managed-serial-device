@@ -30,10 +30,20 @@ void AsyncDuplex::begin(Stream* _stream) {
     began = true;
 }
 
-void AsyncDuplex::wait() {
+bool AsyncDuplex::wait(uint32_t timeout, std::function<void()> feed_watchdog) {
+    uint32_t started = millis();
+
     while(queueLength > 0) {
+        if(timeout && (millis() > started + timeout)) {
+            // Wait timeout
+            return false;
+        }
+        if(feed_watchdog) {
+            feed_watchdog();
+        }
         loop();
     }
+    return true;
 }
 
 bool AsyncDuplex::asyncExecute(

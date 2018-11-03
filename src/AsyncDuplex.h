@@ -40,7 +40,7 @@ class AsyncDuplex: public Stream {
         AsyncDuplex();
 
         void begin(Stream*);
-        void wait();
+        bool wait(uint32_t timeout, std::function<void()> _feed_watchdog=NULL);
         bool asyncExecute(
             const char *_command,
             const char *_expectation = "",
