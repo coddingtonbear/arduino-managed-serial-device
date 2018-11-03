@@ -441,8 +441,15 @@ void loop() {
 }
 ```
 
-# Future Improvement Ideas
+# Note from the author
 
-* Identify a way of storing callback functions that does not rely on
-  dynamic allocation.
-  See [#1](https://github.com/coddingtonbear/arduino-async-duplex/issues/1).
+I'm not a particularly great C++ programmer, and all of the projects
+I work on using this language are ones I work on for fun in my free time.
+It's very likely that you, dear reader, will have a better understanding
+of either C++ or programming for microcontrollers in general and will find
+ways of improving this that I either wouldn't have the skills to pull off
+on my own, or wouldn't even have the awareness of to know how much better
+things could be.  If any of those situations occur, please either reach out
+on freenode -- I'm `coddingtonbear` there, too, search the issues list
+on Github or create a new issue if one doesn't exist, or, better yet,
+post a pull request making things better.  Cheers!
