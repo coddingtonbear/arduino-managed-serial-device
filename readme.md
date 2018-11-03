@@ -440,3 +440,9 @@ void loop() {
     handler.loop();
 }
 ```
+
+# Future Improvement Ideas
+
+* Identify a way of storing callback functions that does not rely on
+  dynamic allocation.
+  See [#1](https://github.com/coddingtonbear/arduino-async-duplex/issues/1).
