@@ -92,6 +92,25 @@ bool AsyncDuplex::asyncExecute(
 }
 
 bool AsyncDuplex::asyncExecute(
+    const char *_command,
+    const char *_expectation,
+    std::function<void(MatchState)> _success,
+    std::function<void(Command*)> _failure,
+    uint16_t _timeout,
+    uint32_t _delay
+) {
+    return AsyncDuplex::asyncExecute(
+        _command,
+        _expectation,
+        AsyncDuplex::Timing::ANY,
+        _success,
+        _failure,
+        _timeout,
+        _delay
+    );
+}
+
+bool AsyncDuplex::asyncExecute(
     const Command* cmd,
     Timing _timing
 ) {

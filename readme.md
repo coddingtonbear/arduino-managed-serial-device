@@ -116,7 +116,6 @@ void setup() {
     handler.asyncExecute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
-        ANY,
         [&handler](MatchState ms) -> void {
             Serial.println("Connected");
 
@@ -258,7 +257,6 @@ void setup() {
     handler.asyncExecute(
         "AT+CCLK?",
         "+CCLK: \"([%d]+)/([%d]+)/([%d]+),([%d]+):([%d]+):([%d]+)([\\+\\-])([%d]+)\"",
-        ANY,
         [&currentTime](MatchState ms) {
             char year_str[3];
             char month_str[3];
@@ -294,7 +292,6 @@ void setup() {
     handler.asyncExecute(
         "AT+CIPSTATUS",
         "STATE: (.*)\n"
-        ANY,
         [&connectionStatus](MatchState ms) {
             ms.GetCapture(connectionStatus, 0);
         }
@@ -323,7 +320,6 @@ void setup() {
     handler.asyncExecute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
-        ANY,
         [](MatchState ms) -> void {
             Serial.println("Connected");
         },
@@ -355,7 +351,6 @@ void setup() {
     handler.asyncExecute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
-        ANY,
         [](MatchState ms) -> void {
             Serial.println("Connected");
         },
@@ -384,7 +379,6 @@ void setup() {
     handler.asyncExecute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
-        ANY,
         NULL,
         NULL,
         10000  // Extended Timeout

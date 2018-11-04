@@ -56,6 +56,14 @@ class AsyncDuplex: public Stream {
             uint32_t _delay = 0
         );
         bool asyncExecute(
+            const char *_command,
+            const char *_expectation = "",
+            std::function<void(MatchState)> _success = NULL,
+            std::function<void(Command*)> _failure = NULL,
+            uint16_t _timeout = COMMAND_TIMEOUT,
+            uint32_t _delay = 0
+        );
+        bool asyncExecute(
             const Command*,
             Timing _timing = Timing::ANY
         );
