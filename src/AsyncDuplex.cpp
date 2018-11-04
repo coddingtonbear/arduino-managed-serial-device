@@ -21,8 +21,10 @@ AsyncDuplex::Command::Command(
     uint16_t _timeout,
     uint32_t _delay
 ) {
-    strcpy(command, _cmd);
-    strcpy(expectation, _expect);
+    strncpy(command, _cmd, MAX_COMMAND_LENGTH - 1);
+    command[MAX_COMMAND_LENGTH - 1] = '\0';
+    strncpy(expectation, _expect, MAX_EXPECTATION_LENGTH - 1);
+    command[MAX_EXPECTATION_LENGTH - 1] = '\0';
     success = _success;
     failure = _failure;
     timeout = _timeout;
@@ -93,6 +95,19 @@ bool AsyncDuplex::asyncExecute(
         queueLength++;
     } else {
         shiftRight();
+    }
+
+    if(strlen(_command) > MAX_COMMAND_LENGTH - 1) {
+        #ifdef ASYNC_DUPLEX_DEBUG
+            AsyncDuplex::debugMessage("\t <Command Rejected>");
+        #endif
+        return false;
+    }
+    if(strlen(_expectation) > MAX_EXPECTATION_LENGTH - 1) {
+        #ifdef ASYNC_DUPLEX_DEBUG
+            AsyncDuplex::debugMessage("\t <Expectation Rejected>");
+        #endif
+        return false;
     }
 
     strcpy(commandQueue[position].command, _command);
