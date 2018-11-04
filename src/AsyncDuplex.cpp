@@ -57,6 +57,23 @@ bool AsyncDuplex::wait(uint32_t _timeout, std::function<void()> feed_watchdog) {
     return true;
 }
 
+bool AsyncDuplex::abort() {
+    if(queueLength > 0) {
+        #ifdef ASYNC_DUPLEX_DEBUG
+            AsyncDuplex::debugMessage("\t <Command Aborted>");
+        #endif
+
+        shiftLeft();
+        inputBuffer[0] = '\0';
+        bufferPos = 0;
+        processing=false;
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
 bool AsyncDuplex::asyncExecute(
     const char *_command,
     const char *_expectation,

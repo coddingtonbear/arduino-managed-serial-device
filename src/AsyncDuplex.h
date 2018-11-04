@@ -46,6 +46,7 @@ class AsyncDuplex: public Stream {
 
         bool begin(Stream*, Stream* _errorStream=NULL);
         bool wait(uint32_t timeout, std::function<void()> _feed_watchdog=NULL);
+        bool abort();
         bool asyncExecute(
             const char *_command,
             const char *_expectation,
