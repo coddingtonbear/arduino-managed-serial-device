@@ -215,4 +215,24 @@ unittest(can_return_match_groups) {
     assertEqual("10", matchGroupResult);
 }
 
+unittest(task_overflows_non_dangerous) {
+    GodmodeState* state = GODMODE();
+    state->resetPorts();
+
+    AsyncDuplex handler = AsyncDuplex();
+    handler.begin(&Serial);
+
+    for(uint8_t i = 0; i < COMMAND_QUEUE_SIZE + 1; i++) {
+        bool result = handler.execute("TEST");
+
+        if(i < COMMAND_QUEUE_SIZE) {
+            assertTrue(result);
+        } else {
+            assertFalse(result);
+        }
+    }
+
+    assertEqual(COMMAND_QUEUE_SIZE, handler.getQueueLength());
+}
+
 unittest_main()
