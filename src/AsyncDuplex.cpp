@@ -72,7 +72,7 @@ bool AsyncDuplex::wait(uint32_t _timeout, std::function<void()> feed_watchdog) {
 bool AsyncDuplex::abort() {
     if(queueLength > 0) {
         #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t <Command Aborted>");
+            AsyncDuplex::debugMessage("\t<Command Aborted>");
         #endif
 
         shiftLeft();
@@ -109,13 +109,13 @@ bool AsyncDuplex::execute(
 
     if(strlen(_command) > MAX_COMMAND_LENGTH - 1) {
         #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t <Command Rejected>");
+            AsyncDuplex::debugMessage("\t<Command Rejected>");
         #endif
         return false;
     }
     if(strlen(_expectation) > MAX_EXPECTATION_LENGTH - 1) {
         #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t <Expectation Rejected>");
+            AsyncDuplex::debugMessage("\t<Expectation Rejected>");
         #endif
         return false;
     }
@@ -278,7 +278,7 @@ void AsyncDuplex::loop(){
             AsyncDuplex::debugMessage(
                 "\t<-- " + nonMatching
             );
-            AsyncDuplex::debugMessage("\t <Command Timeout>");
+            AsyncDuplex::debugMessage("\t<Command Timeout>");
         #endif
 
         Command failedCommand;
@@ -375,13 +375,13 @@ bool AsyncDuplex::registerHook(
 ) {
     if(hookCount == MAX_HOOK_COUNT) {
         #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t <Hook Rejected>");
+            AsyncDuplex::debugMessage("\t<Hook Rejected>");
         #endif
         return false;
     }
     if(strlen(_expectation) + 1 > MAX_EXPECTATION_LENGTH) {
         #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t <Expectation Rejected>");
+            AsyncDuplex::debugMessage("\t<Expectation Rejected>");
         #endif
         return false;
     }
