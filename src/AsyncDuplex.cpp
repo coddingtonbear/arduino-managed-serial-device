@@ -214,7 +214,7 @@ void AsyncDuplex::loop(){
     if(!began) {
         return;
     }
-    if(processing && timeout < millis()) {
+    if(processing && (timeout < millis())) {
         #ifdef ASYNC_DUPLEX_DEBUG
             AsyncDuplex::debugMessage("\t <Command Timeout>");
         #endif
@@ -223,6 +223,7 @@ void AsyncDuplex::loop(){
         AsyncDuplex::copyCommand(&failedCommand, &commandQueue[0]);
         shiftLeft();
         inputBuffer[0] = '\0';
+        bufferPos = 0;
         processing=false;
 
         std::function<void(Command*)> fn = failedCommand.failure;
@@ -235,12 +236,20 @@ void AsyncDuplex::loop(){
         }
     }
     while(stream->available()) {
-        inputBuffer[bufferPos++] = stream->read();
-        inputBuffer[bufferPos] = '\0';
-
+        uint8_t received = stream->read();
+        if(received != '\0') {
+            if(bufferPos + 1 == INPUT_BUFFER_LENGTH) {
+                for(int32_t i = INPUT_BUFFER_LENGTH - 1; i > 0; i--) {
+                    inputBuffer[i-1] = inputBuffer[i];
+                }
+                bufferPos--;
+            }
+            inputBuffer[bufferPos++] = received;
+            inputBuffer[bufferPos] = '\0';
+        }
         #ifdef ASYNC_DUPLEX_DEBUG
             AsyncDuplex::debugMessage(
-                "\t<-- (" + String(bufferPos) + ") \"" + String(inputBuffer) + "\""
+                "\t  = (" + String(bufferPos) + ") \"" + String(inputBuffer) + "\""
             );
         #endif
 
@@ -278,6 +287,8 @@ void AsyncDuplex::loop(){
         #ifdef ASYNC_DUPLEX_DEBUG
             AsyncDuplex::debugMessage("\t--> " + String(commandQueue[0].command));
         #endif
+        inputBuffer[0] = '\0';
+        bufferPos = 0;
         stream->println(commandQueue[0].command);
         stream->flush();
         processing = true;
@@ -318,6 +329,7 @@ std::function<void(AsyncDuplex::Command*)> AsyncDuplex::printFailure(Stream* str
 void AsyncDuplex::emitErrorMessage(const char *msg) {
     if(errorStream != NULL) {
         errorStream->println(msg);
+        errorStream->flush();
     }
 }
 
