@@ -14,6 +14,7 @@
 #define COMMAND_TIMEOUT 2500
 
 //#define ASYNC_DUPLEX_DEBUG
+//#define ASYNC_DUPLEX_DEBUG_VERBOSE
 //#define ASYNC_DUPLEX_DEBUG_COUT
 //#define ASYNC_DUPLEX_DEBUG_STREAM
 
@@ -71,7 +72,13 @@ class AsyncDuplex: public Stream {
         bool asyncExecuteChain(
             const Command*,
             uint16_t count,
-            Timing _timing = Timing::ANY,
+            Timing _timing,
+            std::function<void(MatchState)> _success = NULL,
+            std::function<void(Command*)> _failure = NULL
+        );
+        bool asyncExecuteChain(
+            const Command*,
+            uint16_t count,
             std::function<void(MatchState)> _success = NULL,
             std::function<void(Command*)> _failure = NULL
         );

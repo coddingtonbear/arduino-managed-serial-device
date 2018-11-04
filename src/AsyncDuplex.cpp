@@ -177,6 +177,21 @@ bool AsyncDuplex::asyncExecuteChain(
     );
 }
 
+bool AsyncDuplex::asyncExecuteChain(
+    const Command* cmdArray,
+    uint16_t count,
+    std::function<void(MatchState)> _success,
+    std::function<void(Command*)> _failure
+) {
+    AsyncDuplex::asyncExecuteChain(
+        cmdArray,
+        count,
+        AsyncDuplex::Timing::ANY,
+        _success,
+        _failure
+    );
+}
+
 void AsyncDuplex::createChain(Command* dest, const Command* toChain) {
     Command chained;
     copyCommand(&chained, toChain);
@@ -265,9 +280,11 @@ void AsyncDuplex::loop(){
             inputBuffer[bufferPos] = '\0';
         }
         #ifdef ASYNC_DUPLEX_DEBUG
+        #ifdef ASYNC_DUPLEX_DEBUG_VERBOSE
             AsyncDuplex::debugMessage(
                 "\t  = (" + String(bufferPos) + ") \"" + String(inputBuffer) + "\""
             );
+        #endif
         #endif
 
         if(processing) {
