@@ -105,7 +105,7 @@ class AsyncDuplex: public Stream {
 
         char inputBuffer[INPUT_BUFFER_LENGTH];
         uint16_t bufferPos = 0;
-        uint16_t timeout = 0;
+        uint32_t timeout = 0;
 
         bool began = false;
         bool processing = false;

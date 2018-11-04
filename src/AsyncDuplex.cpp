@@ -41,11 +41,11 @@ bool AsyncDuplex::begin(Stream* _stream, Stream* _errorStream) {
     return true;
 }
 
-bool AsyncDuplex::wait(uint32_t timeout, std::function<void()> feed_watchdog) {
+bool AsyncDuplex::wait(uint32_t _timeout, std::function<void()> feed_watchdog) {
     uint32_t started = millis();
 
     while(queueLength > 0) {
-        if(timeout && (millis() > started + timeout)) {
+        if(_timeout && (millis() > started + _timeout)) {
             // Wait timeout
             return false;
         }
@@ -221,11 +221,6 @@ void AsyncDuplex::loop(){
 
         Command failedCommand;
         AsyncDuplex::copyCommand(&failedCommand, &commandQueue[0]);
-        shiftLeft();
-        inputBuffer[0] = '\0';
-        bufferPos = 0;
-        processing=false;
-
         std::function<void(Command*)> fn = failedCommand.failure;
         if(fn) {
             // Clear delay settings before handing to error
@@ -234,6 +229,11 @@ void AsyncDuplex::loop(){
             failedCommand.delay = 0;
             fn(&failedCommand);
         }
+
+        shiftLeft();
+        inputBuffer[0] = '\0';
+        bufferPos = 0;
+        processing=false;
     }
     while(stream->available()) {
         uint8_t received = stream->read();
