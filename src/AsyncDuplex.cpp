@@ -263,6 +263,11 @@ void AsyncDuplex::loop(){
     }
     if(processing && (timeout < millis())) {
         #ifdef ASYNC_DUPLEX_DEBUG
+            String nonMatching = String(inputBuffer);
+            nonMatching.trim();
+            AsyncDuplex::debugMessage(
+                "\t<-- " + nonMatching
+            );
             AsyncDuplex::debugMessage("\t <Command Timeout>");
         #endif
 
@@ -309,7 +314,14 @@ void AsyncDuplex::loop(){
             char result = ms.Match(commandQueue[0].expectation);
             if(result) {
                 #ifdef ASYNC_DUPLEX_DEBUG
-                    AsyncDuplex::debugMessage("\t<Expectation Matched>");
+                    String src = String(ms.src);
+                    src.trim();
+                    AsyncDuplex::debugMessage(
+                        "\t<-- " + src
+                    );
+                    AsyncDuplex::debugMessage(
+                        "\t<Expectation Matched>"
+                    );
                 #endif
 
                 processing=false;
