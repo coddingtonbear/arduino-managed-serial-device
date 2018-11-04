@@ -31,6 +31,16 @@ AsyncDuplex::Command::Command(
     delay = _delay;
 }
 
+AsyncDuplex::Hook::Hook() {}
+
+AsyncDuplex::Hook::Hook(
+    const char* _expect,
+    std::function<void(MatchState)> _success
+) {
+    strncpy(expectation, _expect, MAX_EXPECTATION_LENGTH - 1);
+    success = _success;
+}
+
 AsyncDuplex::AsyncDuplex(){}
 
 bool AsyncDuplex::begin(Stream* _stream, Stream* _errorStream) {
@@ -288,8 +298,15 @@ void AsyncDuplex::loop(){
         processing=false;
     }
     while(stream->available()) {
+        bool shouldRunHooks = false;
         uint8_t received = stream->read();
         if(received != '\0') {
+            if(received == '\n') {
+                // If we've found a line ending, we should plan to run
+                // any registered hooks so they can check for unsolicited
+                // data that might be useful.
+                shouldRunHooks = true;
+            }
             if(bufferPos + 1 == INPUT_BUFFER_LENGTH) {
                 for(int32_t i = INPUT_BUFFER_LENGTH - 1; i > 0; i--) {
                     inputBuffer[i-1] = inputBuffer[i];
@@ -306,6 +323,10 @@ void AsyncDuplex::loop(){
             );
         #endif
         #endif
+
+        if(shouldRunHooks) {
+            runHooks();
+        }
 
         if(processing) {
             MatchState ms;
@@ -354,6 +375,53 @@ void AsyncDuplex::loop(){
         stream->flush();
         processing = true;
         timeout = millis() + commandQueue[0].timeout;
+    }
+}
+
+bool AsyncDuplex::registerHook(
+    const char *_expectation,
+    std::function<void(MatchState)> _success
+) {
+    if(hookCount == MAX_HOOK_COUNT) {
+        #ifdef ASYNC_DUPLEX_DEBUG
+            AsyncDuplex::debugMessage("\t <Hook Rejected>");
+        #endif
+        return false;
+    }
+    if(strlen(_expectation) + 1 > MAX_EXPECTATION_LENGTH) {
+        #ifdef ASYNC_DUPLEX_DEBUG
+            AsyncDuplex::debugMessage("\t <Expectation Rejected>");
+        #endif
+        return false;
+    }
+    strcpy(hooks[hookCount].expectation, _expectation);
+    hooks[hookCount].success = _success;
+    hookCount++;
+
+    return true;
+}
+
+void AsyncDuplex::runHooks() {
+    for(uint8_t i = 0; i < hookCount; i++) {
+        Hook hook = hooks[i];
+
+        MatchState ms;
+        ms.Target(inputBuffer);
+
+        char result = ms.Match(hook.expectation);
+        if(result) {
+            #ifdef ASYNC_DUPLEX_DEBUG
+                String src = String(ms.src);
+                src.trim();
+                AsyncDuplex::debugMessage(
+                    "\t<-- " + src
+                );
+                AsyncDuplex::debugMessage(
+                    "\t<Hook Triggered>"
+                );
+            #endif
+            hook.success(ms);
+        }
     }
 }
 

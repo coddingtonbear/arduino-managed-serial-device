@@ -235,4 +235,39 @@ unittest(task_overflows_non_dangerous) {
     assertEqual(COMMAND_QUEUE_SIZE, handler.getQueueLength());
 }
 
+unittest(can_register_and_run_hooks) {
+    GodmodeState* state = GODMODE();
+    state->resetPorts();
+
+    bool hookExecuted = false;
+
+    AsyncDuplex handler = AsyncDuplex();
+    handler.begin(&Serial);
+
+    handler.registerHook(
+        "%*PSUTTZ(.*)\r\n",
+        [&hookExecuted](MatchState ms) {
+            hookExecuted = true;
+        }
+    );
+
+    assertFalse(hookExecuted);
+
+    state->serialPort[0].dataIn = "SOMETHING";
+    handler.loop();
+    assertFalse(hookExecuted);
+
+    state->serialPort[0].dataIn = "\r\n";
+    handler.loop();
+    assertFalse(hookExecuted);
+
+    state->serialPort[0].dataIn = "*PSUTTZ: 18/11/04,22:38:07\",\"-32\",0";
+    handler.loop();
+    assertFalse(hookExecuted);
+
+    state->serialPort[0].dataIn = "\r\n";
+    handler.loop();
+    assertTrue(hookExecuted);
+}
+
 unittest_main()

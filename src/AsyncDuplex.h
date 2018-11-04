@@ -12,6 +12,7 @@
 #define MAX_COMMAND_LENGTH 64
 #define MAX_EXPECTATION_LENGTH 128
 #define COMMAND_TIMEOUT 2500
+#define MAX_HOOK_COUNT 10
 
 //#define ASYNC_DUPLEX_DEBUG
 //#define ASYNC_DUPLEX_DEBUG_VERBOSE
@@ -40,6 +41,16 @@ class AsyncDuplex: public Stream {
                 std::function<void(Command*)> _failure = NULL,
                 uint16_t _timeout = COMMAND_TIMEOUT,
                 uint32_t _delay = 0
+            );
+        };
+        struct Hook {
+            char expectation[MAX_EXPECTATION_LENGTH];
+            std::function<void(MatchState)> success;
+
+            Hook();
+            Hook(
+                const char* _expect,
+                std::function<void(MatchState)> _success
             );
         };
 
@@ -83,6 +94,11 @@ class AsyncDuplex: public Stream {
             std::function<void(Command*)> _failure = NULL
         );
 
+        bool registerHook(
+            const char *_expectation,
+            std::function<void(MatchState)> _success
+        );
+
         void loop();
 
         uint8_t getQueueLength();
@@ -99,6 +115,7 @@ class AsyncDuplex: public Stream {
         void flush();
     protected:
         Command commandQueue[COMMAND_QUEUE_SIZE];
+        uint8_t queueLength = 0;
 
         void shiftRight();
         void shiftLeft();
@@ -118,13 +135,15 @@ class AsyncDuplex: public Stream {
         bool began = false;
         bool processing = false;
 
+        Hook hooks[MAX_HOOK_COUNT];
+        uint8_t hookCount = 0;
+        void runHooks();
+
         void emitErrorMessage(const char*);
         #ifdef ASYNC_DUPLEX_DEBUG
             void debugMessage(String);
             void debugMessage(const char*);
         #endif
         Stream* errorStream;
-
         Stream* stream;
-        uint8_t queueLength = 0;
 };
