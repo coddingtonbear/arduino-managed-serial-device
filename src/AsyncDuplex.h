@@ -48,8 +48,8 @@ class AsyncDuplex: public Stream {
         bool wait(uint32_t timeout, std::function<void()> _feed_watchdog=NULL);
         bool asyncExecute(
             const char *_command,
-            const char *_expectation = "",
-            Timing _timing = Timing::ANY,
+            const char *_expectation,
+            Timing _timing,
             std::function<void(MatchState)> _success = NULL,
             std::function<void(Command*)> _failure = NULL,
             uint16_t _timeout = COMMAND_TIMEOUT,
