@@ -13,9 +13,9 @@
 #define MAX_EXPECTATION_LENGTH 128
 #define COMMAND_TIMEOUT 2500
 
-#define ASYNC_DUPLEX_DEBUG
+//#define ASYNC_DUPLEX_DEBUG
 //#define ASYNC_DUPLEX_DEBUG_COUT
-#define ASYNC_DUPLEX_DEBUG_STREAM
+//#define ASYNC_DUPLEX_DEBUG_STREAM
 
 class AsyncDuplex: public Stream {
     public:
