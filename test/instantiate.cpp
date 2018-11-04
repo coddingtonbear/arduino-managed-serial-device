@@ -11,7 +11,7 @@ unittest(simple) {
 
     AsyncDuplex handler = AsyncDuplex();
     handler.begin(&Serial);
-    handler.asyncExecute("TEST");
+    handler.execute("TEST");
     handler.loop();
 
     assertEqual(
@@ -28,7 +28,7 @@ unittest(can_resolve_expectation) {
 
     AsyncDuplex handler = AsyncDuplex();
     handler.begin(&Serial);
-    handler.asyncExecute(
+    handler.execute(
         "TEST",
         "OK",
         AsyncDuplex::NEXT,
@@ -59,7 +59,7 @@ unittest(can_fail_expectation) {
 
     AsyncDuplex handler = AsyncDuplex();
     handler.begin(&Serial);
-    handler.asyncExecute(
+    handler.execute(
         "TEST",
         "OK",
         AsyncDuplex::NEXT,
@@ -94,7 +94,7 @@ unittest(can_fail_expectation_with_display) {
 
     AsyncDuplex handler = AsyncDuplex();
     handler.begin(&Serial);
-    handler.asyncExecute(
+    handler.execute(
         "TEST",
         "OK",
         AsyncDuplex::NEXT,
@@ -123,7 +123,7 @@ unittest(can_execute_from_object) {
     );
     AsyncDuplex handler = AsyncDuplex();
     handler.begin(&Serial);
-    handler.asyncExecute(&cmd);
+    handler.execute(&cmd);
 
     handler.loop();
 
@@ -146,7 +146,7 @@ unittest(can_execute_chain) {
     };
     AsyncDuplex handler = AsyncDuplex();
     handler.begin(&Serial);
-    handler.asyncExecuteChain(
+    handler.executeChain(
         commands,
         3,
         AsyncDuplex::Timing::ANY,
@@ -193,7 +193,7 @@ unittest(can_return_match_groups) {
 
     AsyncDuplex handler = AsyncDuplex();
     handler.begin(&Serial);
-    handler.asyncExecute(
+    handler.execute(
         "TEST",
         "OK%[([%d]+)%]",
         AsyncDuplex::NEXT,

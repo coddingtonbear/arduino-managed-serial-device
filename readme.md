@@ -37,7 +37,7 @@ AsyncDuplex handler = AsyncDuplex();
 void setup() {
     handler.begin(&Serial1);
 
-    handler.asyncExecute("AT");
+    handler.execute("AT");
 }
 
 void loop() {
@@ -62,11 +62,11 @@ AsyncDuplex handler = AsyncDuplex();
 void setup() {
     handler.begin(&Serial);
 
-    handler.asyncExecute(
+    handler.execute(
         "AT+CCLK?",
         "+CCLK:.*\n",
     );
-    handler.asyncExecute(
+    handler.execute(
         "AT+CIPSTATUS",
         "STATE:.*\n"
     );
@@ -113,18 +113,18 @@ AsyncDuplex handler = AsyncDuplex();
 void setup() {
     handler.begin(&Serial);
 
-    handler.asyncExecute(
+    handler.execute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
         [&handler](MatchState ms) -> void {
             Serial.println("Connected");
 
-            handler.asyncExecute(
+            handler.execute(
                 "AT+CIPSEND",
                 ">",
                 NEXT,
                 [&handler](MatchState ms) -> void {
-                    handler.asyncExecute(
+                    handler.execute(
                         "abc\r\n\x1a"
                         "SEND OK\r\n"
                         NEXT,
@@ -175,7 +175,7 @@ void setup() {
             "SEND OK\r\n"
         )
     }
-    handler.asyncExecuteChain(commands, 3);
+    handler.executeChain(commands, 3);
 }
 
 
@@ -215,7 +215,7 @@ void setup() {
             "SEND OK\r\n"
         )
     }
-    handler.asyncExecuteChain(
+    handler.executeChain(
         commands,
         3,
         [](MatchState ms) { // Common success function
@@ -254,7 +254,7 @@ void setup() {
 
     // Get the current timestamp
     time_t currentTime;
-    handler.asyncExecute(
+    handler.execute(
         "AT+CCLK?",
         "+CCLK: \"([%d]+)/([%d]+)/([%d]+),([%d]+):([%d]+):([%d]+)([\\+\\-])([%d]+)\"",
         [&currentTime](MatchState ms) {
@@ -289,7 +289,7 @@ void setup() {
     );
 
     char connectionStatus[10];
-    handler.asyncExecute(
+    handler.execute(
         "AT+CIPSTATUS",
         "STATE: (.*)\n"
         [&connectionStatus](MatchState ms) {
@@ -317,7 +317,7 @@ AsyncDuplex handler = AsyncDuplex();
 
 void setup() {
     handler.begin(&Serial);
-    handler.asyncExecute(
+    handler.execute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
         [](MatchState ms) -> void {
@@ -327,7 +327,7 @@ void setup() {
             Serial.println("Connection failed; retrying");
 
             // Retry this immediately
-            handler.asyncExecute(cmd, AsyncDuplex::Timing::NEXT);
+            handler.execute(cmd, AsyncDuplex::Timing::NEXT);
         }
     );
 }
@@ -348,7 +348,7 @@ AsyncDuplex handler = AsyncDuplex();
 
 void setup() {
     handler.begin(&Serial);
-    handler.asyncExecute(
+    handler.execute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
         [](MatchState ms) -> void {
@@ -376,7 +376,7 @@ AsyncDuplex handler = AsyncDuplex();
 
 void setup() {
     handler.begin(&Serial);
-    handler.asyncExecute(
+    handler.execute(
         "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
         "OK\r\n",  // Expectation regex
         NULL,
@@ -426,7 +426,7 @@ void setup() {
             "SEND OK\r\n"
         )
     }
-    handler.asyncExecuteChain(commands, 3);
+    handler.executeChain(commands, 3);
 }
 
 

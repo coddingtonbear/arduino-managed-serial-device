@@ -76,7 +76,7 @@ bool AsyncDuplex::abort() {
     }
 }
 
-bool AsyncDuplex::asyncExecute(
+bool AsyncDuplex::execute(
     const char *_command,
     const char *_expectation,
     AsyncDuplex::Timing _timing,
@@ -123,7 +123,7 @@ bool AsyncDuplex::asyncExecute(
     return true;
 }
 
-bool AsyncDuplex::asyncExecute(
+bool AsyncDuplex::execute(
     const char *_command,
     const char *_expectation,
     std::function<void(MatchState)> _success,
@@ -131,7 +131,7 @@ bool AsyncDuplex::asyncExecute(
     uint16_t _timeout,
     uint32_t _delay
 ) {
-    return AsyncDuplex::asyncExecute(
+    return AsyncDuplex::execute(
         _command,
         _expectation,
         AsyncDuplex::Timing::ANY,
@@ -142,11 +142,11 @@ bool AsyncDuplex::asyncExecute(
     );
 }
 
-bool AsyncDuplex::asyncExecute(
+bool AsyncDuplex::execute(
     const Command* cmd,
     Timing _timing
 ) {
-    return AsyncDuplex::asyncExecute(
+    return AsyncDuplex::execute(
         cmd->command,
         cmd->expectation,
         _timing,
@@ -156,7 +156,7 @@ bool AsyncDuplex::asyncExecute(
     );
 }
 
-bool AsyncDuplex::asyncExecuteChain(
+bool AsyncDuplex::executeChain(
     const Command* cmdArray,
     uint16_t count,
     Timing _timing,
@@ -186,19 +186,19 @@ bool AsyncDuplex::asyncExecuteChain(
             &scratch
         );
     }
-    return AsyncDuplex::asyncExecute(
+    return AsyncDuplex::execute(
         &chain,
         _timing
     );
 }
 
-bool AsyncDuplex::asyncExecuteChain(
+bool AsyncDuplex::executeChain(
     const Command* cmdArray,
     uint16_t count,
     std::function<void(MatchState)> _success,
     std::function<void(Command*)> _failure
 ) {
-    AsyncDuplex::asyncExecuteChain(
+    AsyncDuplex::executeChain(
         cmdArray,
         count,
         AsyncDuplex::Timing::ANY,
@@ -216,7 +216,7 @@ void AsyncDuplex::createChain(Command* dest, const Command* toChain) {
         if(originalSuccess) {
             originalSuccess(ms);
         }
-        AsyncDuplex::asyncExecute(
+        AsyncDuplex::execute(
             &chained,
             Timing::NEXT
         );

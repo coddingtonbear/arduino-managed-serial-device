@@ -48,7 +48,7 @@ class AsyncDuplex: public Stream {
         bool begin(Stream*, Stream* _errorStream=NULL);
         bool wait(uint32_t timeout, std::function<void()> _feed_watchdog=NULL);
         bool abort();
-        bool asyncExecute(
+        bool execute(
             const char *_command,
             const char *_expectation,
             Timing _timing,
@@ -57,7 +57,7 @@ class AsyncDuplex: public Stream {
             uint16_t _timeout = COMMAND_TIMEOUT,
             uint32_t _delay = 0
         );
-        bool asyncExecute(
+        bool execute(
             const char *_command,
             const char *_expectation = "",
             std::function<void(MatchState)> _success = NULL,
@@ -65,18 +65,18 @@ class AsyncDuplex: public Stream {
             uint16_t _timeout = COMMAND_TIMEOUT,
             uint32_t _delay = 0
         );
-        bool asyncExecute(
+        bool execute(
             const Command*,
             Timing _timing = Timing::ANY
         );
-        bool asyncExecuteChain(
+        bool executeChain(
             const Command*,
             uint16_t count,
             Timing _timing,
             std::function<void(MatchState)> _success = NULL,
             std::function<void(Command*)> _failure = NULL
         );
-        bool asyncExecuteChain(
+        bool executeChain(
             const Command*,
             uint16_t count,
             std::function<void(MatchState)> _success = NULL,
