@@ -88,7 +88,7 @@ sequential steps that are dependent upon one another:
    commands could be queued and inserted between the above commands if
    another function queues a high-priority (`AsyncDuplex::Timing::NEXT`)
    command.
-3. There are a limited number of independent queue slots (by default: 3,
+3. There are a limited number of independent queue slots (by default: 5,
    but this value can be adjusted by changing `COMMAND_QUEUE_SIZE`).
 
 

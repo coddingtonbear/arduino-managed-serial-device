@@ -352,16 +352,7 @@ void AsyncDuplex::loop(){
                 if(fn) {
                     fn(ms);
                 }
-                uint16_t offset = ms.MatchStart + ms.MatchLength;
-                for(uint16_t i = offset; i < INPUT_BUFFER_LENGTH; i++) {
-                    inputBuffer[i - offset] = inputBuffer[i];
-                    bufferPos = i - offset;
-                    // If we reached the end of the capture, we
-                    // do not need to copy anything further
-                    if(inputBuffer[i] == '\0') {
-                        break;
-                    }
-                }
+                stripMatchFromInputBuffer(ms);
             }
         }
     }
@@ -453,6 +444,19 @@ std::function<void(AsyncDuplex::Command*)> AsyncDuplex::printFailure(Stream* str
             "Command '" + String(cmd->command) + "' failed."
         );
     };
+}
+
+void AsyncDuplex::stripMatchFromInputBuffer(MatchState ms) {
+    uint16_t offset = ms.MatchStart + ms.MatchLength;
+    for(uint16_t i = offset; i < INPUT_BUFFER_LENGTH; i++) {
+        inputBuffer[i - offset] = inputBuffer[i];
+        bufferPos = i - offset;
+        // If we reached the end of the capture, we
+        // do not need to copy anything further
+        if(inputBuffer[i] == '\0') {
+            break;
+        }
+    }
 }
 
 void AsyncDuplex::emitErrorMessage(const char *msg) {

@@ -7,7 +7,7 @@
 #undef max
 #include <Regexp.h>
 
-#define COMMAND_QUEUE_SIZE 3
+#define COMMAND_QUEUE_SIZE 5
 #define INPUT_BUFFER_LENGTH 256
 #define MAX_COMMAND_LENGTH 64
 #define MAX_EXPECTATION_LENGTH 128
@@ -106,6 +106,7 @@ class AsyncDuplex: public Stream {
 
         // Helper functions
         std::function<void(Command*)> printFailure(Stream*);
+        void stripMatchFromInputBuffer(MatchState ms);
 
         // Stream
         int available();
