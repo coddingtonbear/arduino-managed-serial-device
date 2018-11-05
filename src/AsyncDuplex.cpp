@@ -324,14 +324,9 @@ void AsyncDuplex::loop(){
         #endif
         #endif
 
-        if(shouldRunHooks) {
-            runHooks();
-        }
-
         if(processing) {
             MatchState ms;
             ms.Target(inputBuffer);
-
             char result = ms.Match(commandQueue[0].expectation);
             if(result) {
                 #ifdef ASYNC_DUPLEX_DEBUG
@@ -354,6 +349,10 @@ void AsyncDuplex::loop(){
                 }
                 stripMatchFromInputBuffer(ms);
             }
+        }
+
+        if(shouldRunHooks) {
+            runHooks();
         }
     }
     if(!processing && queueLength > 0 && commandQueue[0].delay <= millis()) {
