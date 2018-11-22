@@ -1,22 +1,19 @@
 {
-  "name": "ArduinoJson",
-  "keywords": "json, rest, http, web",
-  "description": "An elegant and efficient JSON library for embedded systems",
-  "homepage": "https://arduinojson.org/?utm_source=meta&utm_medium=library.json",
+  "name": "arduino-async-duplex",
+  "keywords": "stream, duplex, at, modem",
+  "description": "Easily and asynchronously interact with a serial device requiring call-and-response style commands.",
+  "homepage": "https://github.com/coddingtonbear/arduino-async-duplex",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bblanchon/ArduinoJson.git"
+    "url": "https://github.com/coddingtonbear/arduino-async-duplex.git"
   },
-  "version": "5.13.3",
+  "version": "1.0.0",
   "authors": {
-    "name": "Benoit Blanchon",
-    "url": "https://blog.benoitblanchon.fr"
+    "name": "Adam Coddington",
+    "url": "https://coddingtonbear.net/"
   },
   "exclude": [
-    "fuzzing",
-    "scripts",
-    "test",
-    "third-party"
+    "test"
   ],
   "frameworks": "arduino",
   "platforms": "*"
