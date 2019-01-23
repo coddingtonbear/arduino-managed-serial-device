@@ -167,7 +167,7 @@ void setup() {
             [](MatchState ms){
                 Serial.println("Connected");
             }
-        },
+        ),
         ManagedSerialDevice::Command(
             "AT+CIPSEND",
             ">",
@@ -207,7 +207,7 @@ void setup() {
             [](MatchState ms){
                 Serial.println("Connected");
             }
-        },
+        ),
         ManagedSerialDevice::Command(
             "AT+CIPSEND",
             ">",
@@ -414,7 +414,7 @@ void setup() {
             [](MatchState ms){
                 Serial.println("Connected");
             }
-        },
+        ),
         ManagedSerialDevice::Command(
             "AT+CIPSEND",
             ">",
