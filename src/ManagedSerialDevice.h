@@ -14,12 +14,12 @@
 #define COMMAND_TIMEOUT 2500
 #define MAX_HOOK_COUNT 10
 
-//#define ASYNC_DUPLEX_DEBUG
-//#define ASYNC_DUPLEX_DEBUG_VERBOSE
-//#define ASYNC_DUPLEX_DEBUG_COUT
-//#define ASYNC_DUPLEX_DEBUG_STREAM
+//#define MANAGED_SERIAL_DEVICE_DEBUG
+//#define MANAGED_SERIAL_DEVICE_DEBUG_VERBOSE
+//#define MANAGED_SERIAL_DEVICE_DEBUG_COUT
+//#define MANAGED_SERIAL_DEVICE_DEBUG_STREAM
 
-class AsyncDuplex: public Stream {
+class ManagedSerialDevice: public Stream {
     public:
         enum Timing{
             NEXT,
@@ -54,7 +54,7 @@ class AsyncDuplex: public Stream {
             );
         };
 
-        AsyncDuplex();
+        ManagedSerialDevice();
 
         bool begin(Stream*, Stream* _errorStream=NULL);
         bool wait(uint32_t timeout, std::function<void()> _feed_watchdog=NULL);
@@ -141,7 +141,7 @@ class AsyncDuplex: public Stream {
         void runHooks();
 
         void emitErrorMessage(const char*);
-        #ifdef ASYNC_DUPLEX_DEBUG
+        #ifdef MANAGED_SERIAL_DEVICE_DEBUG
             void debugMessage(String);
             void debugMessage(const char*);
         #endif

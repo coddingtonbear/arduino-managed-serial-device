@@ -5,15 +5,15 @@
 #undef max
 #include <Regexp.h>
 
-#include "AsyncDuplex.h"
+#include "ManagedSerialDevice.h"
 
-#ifdef ASYNC_DUPLEX_DEBUG_COUT
+#ifdef MANAGED_SERIAL_DEVICE_DEBUG_COUT
     #include <iostream>
 #endif
 
-AsyncDuplex::Command::Command() {}
+ManagedSerialDevice::Command::Command() {}
 
-AsyncDuplex::Command::Command(
+ManagedSerialDevice::Command::Command(
     const char* _cmd,
     const char* _expect,
     std::function<void(MatchState)> _success,
@@ -31,9 +31,9 @@ AsyncDuplex::Command::Command(
     delay = _delay;
 }
 
-AsyncDuplex::Hook::Hook() {}
+ManagedSerialDevice::Hook::Hook() {}
 
-AsyncDuplex::Hook::Hook(
+ManagedSerialDevice::Hook::Hook(
     const char* _expect,
     std::function<void(MatchState)> _success
 ) {
@@ -41,9 +41,9 @@ AsyncDuplex::Hook::Hook(
     success = _success;
 }
 
-AsyncDuplex::AsyncDuplex(){}
+ManagedSerialDevice::ManagedSerialDevice(){}
 
-bool AsyncDuplex::begin(Stream* _stream, Stream* _errorStream) {
+bool ManagedSerialDevice::begin(Stream* _stream, Stream* _errorStream) {
     stream = _stream;
     errorStream = _errorStream;
     began = true;
@@ -53,7 +53,7 @@ bool AsyncDuplex::begin(Stream* _stream, Stream* _errorStream) {
     return true;
 }
 
-bool AsyncDuplex::wait(uint32_t _timeout, std::function<void()> feed_watchdog) {
+bool ManagedSerialDevice::wait(uint32_t _timeout, std::function<void()> feed_watchdog) {
     uint32_t started = millis();
 
     while(queueLength > 0) {
@@ -69,10 +69,10 @@ bool AsyncDuplex::wait(uint32_t _timeout, std::function<void()> feed_watchdog) {
     return true;
 }
 
-bool AsyncDuplex::abort() {
+bool ManagedSerialDevice::abort() {
     if(queueLength > 0) {
-        #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t<Command Aborted>");
+        #ifdef MANAGED_SERIAL_DEVICE_DEBUG
+            ManagedSerialDevice::debugMessage("\t<Command Aborted>");
         #endif
 
         shiftLeft();
@@ -86,10 +86,10 @@ bool AsyncDuplex::abort() {
     }
 }
 
-bool AsyncDuplex::execute(
+bool ManagedSerialDevice::execute(
     const char *_command,
     const char *_expectation,
-    AsyncDuplex::Timing _timing,
+    ManagedSerialDevice::Timing _timing,
     std::function<void(MatchState)> _success,
     std::function<void(Command*)> _failure,
     uint16_t _timeout,
@@ -108,14 +108,14 @@ bool AsyncDuplex::execute(
     }
 
     if(strlen(_command) > MAX_COMMAND_LENGTH - 1) {
-        #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t<Command Rejected>");
+        #ifdef MANAGED_SERIAL_DEVICE_DEBUG
+            ManagedSerialDevice::debugMessage("\t<Command Rejected>");
         #endif
         return false;
     }
     if(strlen(_expectation) > MAX_EXPECTATION_LENGTH - 1) {
-        #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t<Expectation Rejected>");
+        #ifdef MANAGED_SERIAL_DEVICE_DEBUG
+            ManagedSerialDevice::debugMessage("\t<Expectation Rejected>");
         #endif
         return false;
     }
@@ -133,7 +133,7 @@ bool AsyncDuplex::execute(
     return true;
 }
 
-bool AsyncDuplex::execute(
+bool ManagedSerialDevice::execute(
     const char *_command,
     const char *_expectation,
     std::function<void(MatchState)> _success,
@@ -141,10 +141,10 @@ bool AsyncDuplex::execute(
     uint16_t _timeout,
     uint32_t _delay
 ) {
-    return AsyncDuplex::execute(
+    return ManagedSerialDevice::execute(
         _command,
         _expectation,
-        AsyncDuplex::Timing::ANY,
+        ManagedSerialDevice::Timing::ANY,
         _success,
         _failure,
         _timeout,
@@ -152,11 +152,11 @@ bool AsyncDuplex::execute(
     );
 }
 
-bool AsyncDuplex::execute(
+bool ManagedSerialDevice::execute(
     const Command* cmd,
     Timing _timing
 ) {
-    return AsyncDuplex::execute(
+    return ManagedSerialDevice::execute(
         cmd->command,
         cmd->expectation,
         _timing,
@@ -166,7 +166,7 @@ bool AsyncDuplex::execute(
     );
 }
 
-bool AsyncDuplex::executeChain(
+bool ManagedSerialDevice::executeChain(
     const Command* cmdArray,
     uint16_t count,
     Timing _timing,
@@ -179,45 +179,45 @@ bool AsyncDuplex::executeChain(
 
     Command scratch;
     Command chain = cmdArray[count - 1];
-    AsyncDuplex::prependCallback(&chain, _success, _failure);
+    ManagedSerialDevice::prependCallback(&chain, _success, _failure);
 
     for(int16_t i = count - 2; i >= 0; i--) {
-        AsyncDuplex::copyCommand(
+        ManagedSerialDevice::copyCommand(
             &scratch,
             &cmdArray[i]
         );
-        AsyncDuplex::prependCallback(&scratch, _success, _failure);
-        AsyncDuplex::createChain(
+        ManagedSerialDevice::prependCallback(&scratch, _success, _failure);
+        ManagedSerialDevice::createChain(
             &scratch,
             &chain
         );
-        AsyncDuplex::copyCommand(
+        ManagedSerialDevice::copyCommand(
             &chain,
             &scratch
         );
     }
-    return AsyncDuplex::execute(
+    return ManagedSerialDevice::execute(
         &chain,
         _timing
     );
 }
 
-bool AsyncDuplex::executeChain(
+bool ManagedSerialDevice::executeChain(
     const Command* cmdArray,
     uint16_t count,
     std::function<void(MatchState)> _success,
     std::function<void(Command*)> _failure
 ) {
-    AsyncDuplex::executeChain(
+    ManagedSerialDevice::executeChain(
         cmdArray,
         count,
-        AsyncDuplex::Timing::ANY,
+        ManagedSerialDevice::Timing::ANY,
         _success,
         _failure
     );
 }
 
-void AsyncDuplex::createChain(Command* dest, const Command* toChain) {
+void ManagedSerialDevice::createChain(Command* dest, const Command* toChain) {
     Command chained;
     copyCommand(&chained, toChain);
 
@@ -226,14 +226,14 @@ void AsyncDuplex::createChain(Command* dest, const Command* toChain) {
         if(originalSuccess) {
             originalSuccess(ms);
         }
-        AsyncDuplex::execute(
+        ManagedSerialDevice::execute(
             &chained,
             Timing::NEXT
         );
     };
 }
 
-void AsyncDuplex::copyCommand(Command* dest, const Command* src) {
+void ManagedSerialDevice::copyCommand(Command* dest, const Command* src) {
     strcpy(dest->command, src->command);
     strcpy(dest->expectation, src->expectation);
     dest->success = src->success;
@@ -242,7 +242,7 @@ void AsyncDuplex::copyCommand(Command* dest, const Command* src) {
     dest->delay = src->delay;
 }
 
-void AsyncDuplex::prependCallback(
+void ManagedSerialDevice::prependCallback(
     Command* cmd, 
     std::function<void(MatchState)> _success,
     std::function<void(Command*)> _failure
@@ -267,22 +267,22 @@ void AsyncDuplex::prependCallback(
     }
 }
 
-void AsyncDuplex::loop(){
+void ManagedSerialDevice::loop(){
     if(!began) {
         return;
     }
     if(processing && (timeout < millis())) {
-        #ifdef ASYNC_DUPLEX_DEBUG
+        #ifdef MANAGED_SERIAL_DEVICE_DEBUG
             String nonMatching = String(inputBuffer);
             nonMatching.trim();
-            AsyncDuplex::debugMessage(
+            ManagedSerialDevice::debugMessage(
                 "\t<-- " + nonMatching
             );
-            AsyncDuplex::debugMessage("\t<Command Timeout>");
+            ManagedSerialDevice::debugMessage("\t<Command Timeout>");
         #endif
 
         Command failedCommand;
-        AsyncDuplex::copyCommand(&failedCommand, &commandQueue[0]);
+        ManagedSerialDevice::copyCommand(&failedCommand, &commandQueue[0]);
         std::function<void(Command*)> fn = failedCommand.failure;
         if(fn) {
             // Clear delay settings before handing to error
@@ -316,9 +316,9 @@ void AsyncDuplex::loop(){
             inputBuffer[bufferPos++] = received;
             inputBuffer[bufferPos] = '\0';
         }
-        #ifdef ASYNC_DUPLEX_DEBUG
-        #ifdef ASYNC_DUPLEX_DEBUG_VERBOSE
-            AsyncDuplex::debugMessage(
+        #ifdef MANAGED_SERIAL_DEVICE_DEBUG
+        #ifdef MANAGED_SERIAL_DEVICE_DEBUG_VERBOSE
+            ManagedSerialDevice::debugMessage(
                 "\t  = (" + String(bufferPos) + ") \"" + String(inputBuffer) + "\""
             );
         #endif
@@ -329,13 +329,13 @@ void AsyncDuplex::loop(){
             ms.Target(inputBuffer);
             char result = ms.Match(commandQueue[0].expectation);
             if(result) {
-                #ifdef ASYNC_DUPLEX_DEBUG
+                #ifdef MANAGED_SERIAL_DEVICE_DEBUG
                     String src = String(ms.src);
                     src.trim();
-                    AsyncDuplex::debugMessage(
+                    ManagedSerialDevice::debugMessage(
                         "\t<-- " + src
                     );
-                    AsyncDuplex::debugMessage(
+                    ManagedSerialDevice::debugMessage(
                         "\t<Expectation Matched>"
                     );
                 #endif
@@ -356,8 +356,8 @@ void AsyncDuplex::loop(){
         }
     }
     if(!processing && queueLength > 0 && commandQueue[0].delay <= millis()) {
-        #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t--> " + String(commandQueue[0].command));
+        #ifdef MANAGED_SERIAL_DEVICE_DEBUG
+            ManagedSerialDevice::debugMessage("\t--> " + String(commandQueue[0].command));
         #endif
         inputBuffer[0] = '\0';
         bufferPos = 0;
@@ -368,19 +368,19 @@ void AsyncDuplex::loop(){
     }
 }
 
-bool AsyncDuplex::registerHook(
+bool ManagedSerialDevice::registerHook(
     const char *_expectation,
     std::function<void(MatchState)> _success
 ) {
     if(hookCount == MAX_HOOK_COUNT) {
-        #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t<Hook Rejected>");
+        #ifdef MANAGED_SERIAL_DEVICE_DEBUG
+            ManagedSerialDevice::debugMessage("\t<Hook Rejected>");
         #endif
         return false;
     }
     if(strlen(_expectation) + 1 > MAX_EXPECTATION_LENGTH) {
-        #ifdef ASYNC_DUPLEX_DEBUG
-            AsyncDuplex::debugMessage("\t<Expectation Rejected>");
+        #ifdef MANAGED_SERIAL_DEVICE_DEBUG
+            ManagedSerialDevice::debugMessage("\t<Expectation Rejected>");
         #endif
         return false;
     }
@@ -391,7 +391,7 @@ bool AsyncDuplex::registerHook(
     return true;
 }
 
-void AsyncDuplex::runHooks() {
+void ManagedSerialDevice::runHooks() {
     for(uint8_t i = 0; i < hookCount; i++) {
         Hook hook = hooks[i];
 
@@ -400,13 +400,13 @@ void AsyncDuplex::runHooks() {
 
         char result = ms.Match(hook.expectation);
         if(result) {
-            #ifdef ASYNC_DUPLEX_DEBUG
+            #ifdef MANAGED_SERIAL_DEVICE_DEBUG
                 String src = String(ms.src);
                 src.trim();
-                AsyncDuplex::debugMessage(
+                ManagedSerialDevice::debugMessage(
                     "\t<-- " + src
                 );
-                AsyncDuplex::debugMessage(
+                ManagedSerialDevice::debugMessage(
                     "\t<Hook Triggered>"
                 );
             #endif
@@ -415,37 +415,37 @@ void AsyncDuplex::runHooks() {
     }
 }
 
-uint8_t AsyncDuplex::getQueueLength() {
+uint8_t ManagedSerialDevice::getQueueLength() {
     return queueLength;
 }
 
-void AsyncDuplex::getResponse(char* buffer, uint16_t length) {
+void ManagedSerialDevice::getResponse(char* buffer, uint16_t length) {
     strncpy(buffer, inputBuffer, length);
 }
 
-void AsyncDuplex::shiftRight() {
+void ManagedSerialDevice::shiftRight() {
     for(int8_t i = 0; i < queueLength - 1; i++) {
-        AsyncDuplex::copyCommand(&commandQueue[i+1], &commandQueue[i]);
+        ManagedSerialDevice::copyCommand(&commandQueue[i+1], &commandQueue[i]);
     }
     queueLength++;
 }
 
-void AsyncDuplex::shiftLeft() {
+void ManagedSerialDevice::shiftLeft() {
     for(int8_t i = queueLength - 1; i > 0; i--) {
-        AsyncDuplex::copyCommand(&commandQueue[i-1], &commandQueue[i]);
+        ManagedSerialDevice::copyCommand(&commandQueue[i-1], &commandQueue[i]);
     }
     queueLength--;
 }
 
-std::function<void(AsyncDuplex::Command*)> AsyncDuplex::printFailure(Stream* stream) {
-    return [stream](AsyncDuplex::Command* cmd) {
+std::function<void(ManagedSerialDevice::Command*)> ManagedSerialDevice::printFailure(Stream* stream) {
+    return [stream](ManagedSerialDevice::Command* cmd) {
         stream->println(
             "Command '" + String(cmd->command) + "' failed."
         );
     };
 }
 
-void AsyncDuplex::stripMatchFromInputBuffer(MatchState ms) {
+void ManagedSerialDevice::stripMatchFromInputBuffer(MatchState ms) {
     uint16_t offset = ms.MatchStart + ms.MatchLength;
     for(uint16_t i = offset; i < INPUT_BUFFER_LENGTH; i++) {
         inputBuffer[i - offset] = inputBuffer[i];
@@ -458,51 +458,51 @@ void AsyncDuplex::stripMatchFromInputBuffer(MatchState ms) {
     }
 }
 
-void AsyncDuplex::emitErrorMessage(const char *msg) {
+void ManagedSerialDevice::emitErrorMessage(const char *msg) {
     if(errorStream != NULL) {
         errorStream->println(msg);
         errorStream->flush();
     }
 }
 
-#ifdef ASYNC_DUPLEX_DEBUG
-void AsyncDuplex::debugMessage(String msg) {
-    #ifdef ASYNC_DUPLEX_DEBUG_COUT
+#ifdef MANAGED_SERIAL_DEVICE_DEBUG
+void ManagedSerialDevice::debugMessage(String msg) {
+    #ifdef MANAGED_SERIAL_DEVICE_DEBUG_COUT
         std::cout << msg;
         std::cout << "\n";
     #endif
-    #ifdef ASYNC_DUPLEX_DEBUG_STREAM
-        AsyncDuplex::emitErrorMessage(msg.c_str());
+    #ifdef MANAGED_SERIAL_DEVICE_DEBUG_STREAM
+        ManagedSerialDevice::emitErrorMessage(msg.c_str());
     #endif
 }
 
-void AsyncDuplex::debugMessage(const char *msg) {
-    #ifdef ASYNC_DUPLEX_DEBUG_COUT
+void ManagedSerialDevice::debugMessage(const char *msg) {
+    #ifdef MANAGED_SERIAL_DEVICE_DEBUG_COUT
         std::cout << msg;
         std::cout << "\n";
     #endif
-    #ifdef ASYNC_DUPLEX_DEBUG_STREAM
-        AsyncDuplex::emitErrorMessage(msg);
+    #ifdef MANAGED_SERIAL_DEVICE_DEBUG_STREAM
+        ManagedSerialDevice::emitErrorMessage(msg);
     #endif
 }
 #endif
 
-inline int AsyncDuplex::available() {
+inline int ManagedSerialDevice::available() {
     return stream->available();
 }
 
-inline size_t AsyncDuplex::write(uint8_t bt) {
+inline size_t ManagedSerialDevice::write(uint8_t bt) {
     return stream->write(bt);
 }
 
-inline int AsyncDuplex::read() {
+inline int ManagedSerialDevice::read() {
     return stream->read();
 }
 
-inline int AsyncDuplex::peek() {
+inline int ManagedSerialDevice::peek() {
     return stream->peek();
 }
 
-inline void AsyncDuplex::flush() {
+inline void ManagedSerialDevice::flush() {
     return stream->flush();
 }

@@ -1,9 +1,11 @@
-# Arduino Async Duplex
+# Arduino Managed Serial Device
 
-This library allows you to asynchronously interact with any serial device
-having a call-and-response style interface.
+*Note* This library was formerly less-descriptively named "Arduino Async Duplex"
 
-If you've ever used one of the many modem-handling libraries that exist,
+This library allows you to asynchronously interact with any device
+having a call-and-response style serial command interface.
+
+If you've ever used one of the many serial-controlled devices that exist,
 you're familiar with the frustration that is waiting for a response from
 a long-running command.  Between sending your command and receiving a
 response (or worse -- that command timing out), your program is halted,
@@ -29,10 +31,10 @@ The following examples are based upon interactions with a SIM7000 LTE modem.
 Sending a command is as easy as queueing it:
 
 ```c++
-#include <AsyncDuplex.h>
+#include <ManagedSerialDevice.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex();
+ManagedSerialDevice handler = ManagedSerialDevice();
 
 void setup() {
     handler.begin(&Serial1);
@@ -54,10 +56,10 @@ When executing multiple independent commands, you can follow the below
 pattern:
 
 ```c++
-#include <AsyncDuplex.h>
+#include <ManagedSerialDevice.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex();
+ManagedSerialDevice handler = ManagedSerialDevice();
 
 void setup() {
     handler.begin(&Serial);
@@ -86,7 +88,7 @@ sequential steps that are dependent upon one another:
    commands will still be executed.
 2. No guarantee is made that these will be executed sequentially.  More
    commands could be queued and inserted between the above commands if
-   another function queues a high-priority (`AsyncDuplex::Timing::NEXT`)
+   another function queues a high-priority (`ManagedSerialDevice::Timing::NEXT`)
    command.
 3. There are a limited number of independent queue slots (by default: 5,
    but this value can be adjusted by changing `COMMAND_QUEUE_SIZE`).
@@ -105,10 +107,10 @@ The below commands will be executed sequentially and should any command's
 expectations not be met, subsequent commands will not be executed.
 
 ```c++
-#include <AsyncDuplex.h>
+#include <ManagedSerialDevice.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex();
+ManagedSerialDevice handler = ManagedSerialDevice();
 
 void setup() {
     handler.begin(&Serial);
@@ -150,27 +152,27 @@ should any command's expectations not be met), there is a simpler way
 of handling these:
 
 ```c++
-#include <AsyncDuplex.h>
+#include <ManagedSerialDevice.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex();
+ManagedSerialDevice handler = ManagedSerialDevice();
 
 void setup() {
     handler.begin(&Serial);
 
-    AsyncDuplex::Command commands[] = {
-        AsyncDuplex::Command(
+    ManagedSerialDevice::Command commands[] = {
+        ManagedSerialDevice::Command(
             "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
             "OK\r\n",  // Expectation regex
             [](MatchState ms){
                 Serial.println("Connected");
             }
         },
-        AsyncDuplex::Command(
+        ManagedSerialDevice::Command(
             "AT+CIPSEND",
             ">",
         ),
-        AsyncDuplex::Command(
+        ManagedSerialDevice::Command(
             "abc\r\n\x1a"
             "SEND OK\r\n"
         )
@@ -190,27 +192,27 @@ prepended to any callback that might have originally been defined for every
 member of the chain:
 
 ```c++
-#include <AsyncDuplex.h>
+#include <ManagedSerialDevice.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex();
+ManagedSerialDevice handler = ManagedSerialDevice();
 
 void setup() {
     handler.begin(&Serial);
 
-    AsyncDuplex::Command commands[] = {
-        AsyncDuplex::Command(
+    ManagedSerialDevice::Command commands[] = {
+        ManagedSerialDevice::Command(
             "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
             "OK\r\n",  // Expectation regex
             [](MatchState ms){
                 Serial.println("Connected");
             }
         },
-        AsyncDuplex::Command(
+        ManagedSerialDevice::Command(
             "AT+CIPSEND",
             ">",
         ),
-        AsyncDuplex::Command(
+        ManagedSerialDevice::Command(
             "abc\r\n\x1a"
             "SEND OK\r\n"
         )
@@ -244,10 +246,10 @@ The below example will execute the relevant commands and, when the response
 is received, set local variables using captured data.
 
 ```c++
-#include <AsyncDuplex.h>
+#include <ManagedSerialDevice.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex();
+ManagedSerialDevice handler = ManagedSerialDevice();
 
 void setup() {
     handler.begin(&Serial);
@@ -310,10 +312,10 @@ timeout.  If you would like to retry the command (and subsequent commands
 chained with it), you are able to do so.
 
 ```c++
-#include <AsyncDuplex.h>
+#include <ManagedSerialDevice.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex();
+ManagedSerialDevice handler = ManagedSerialDevice();
 
 void setup() {
     handler.begin(&Serial);
@@ -323,11 +325,11 @@ void setup() {
         [](MatchState ms) -> void {
             Serial.println("Connected");
         },
-        [&handler](AsyncDuplex::Command* cmd) -> void {  // Run this function on failure
+        [&handler](ManagedSerialDevice::Command* cmd) -> void {  // Run this function on failure
             Serial.println("Connection failed; retrying");
 
             // Retry this immediately
-            handler.execute(cmd, AsyncDuplex::Timing::NEXT);
+            handler.execute(cmd, ManagedSerialDevice::Timing::NEXT);
         }
     );
 }
@@ -338,13 +340,13 @@ void loop() {
 ```
 
 If you only want to print to the console that an error occurred, you can
-use the `AsyncDuplex::printFailure` helper:
+use the `ManagedSerialDevice::printFailure` helper:
 
 ```c++
-#include <AsyncDuplex.h>
+#include <ManagedSerialDevice.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex();
+ManagedSerialDevice handler = ManagedSerialDevice();
 
 void setup() {
     handler.begin(&Serial);
@@ -354,7 +356,7 @@ void setup() {
         [](MatchState ms) -> void {
             Serial.println("Connected");
         },
-        AsyncDuplex::printFailure(&Serial1), // Will print "Command 'AT+CIPSTART...' failed."
+        ManagedSerialDevice::printFailure(&Serial1), // Will print "Command 'AT+CIPSTART...' failed."
     );
 }
 
@@ -369,10 +371,10 @@ By default, commands time out after 2.5s (see `COMMAND_TIMEOUT`); sometimes
 you may need to run a command that needs extra time to complete:
 
 ```c++
-#include <AsyncDuplex.h>
+#include <ManagedSerialDevice.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex();
+ManagedSerialDevice handler = ManagedSerialDevice();
 
 void setup() {
     handler.begin(&Serial);
@@ -397,23 +399,23 @@ that a subsequent command isn't executed immediately; in these cases,
 you are able to set a delay:
 
 ```c++
-#include <AsyncDuplex.h>
+#include <ManagedSerialDevice.h>
 #include <Regexp.h>
 
-AsyncDuplex handler = AsyncDuplex();
+ManagedSerialDevice handler = ManagedSerialDevice();
 
 void setup() {
     handler.begin(&Serial);
 
-    AsyncDuplex::Command commands[] = {
-        AsyncDuplex::Command(
+    ManagedSerialDevice::Command commands[] = {
+        ManagedSerialDevice::Command(
             "AT+CIPSTART=\"TCP\",\"mywebsite.com\",\"80\"", // Command
             "OK\r\n",  // Expectation regex
             [](MatchState ms){
                 Serial.println("Connected");
             }
         },
-        AsyncDuplex::Command(
+        ManagedSerialDevice::Command(
             "AT+CIPSEND",
             ">",
             NULL,
@@ -421,7 +423,7 @@ void setup() {
             COMMAND_TIMEOUT,
             1000  // Wait for 1s before running this command 
         ),
-        AsyncDuplex::Command(
+        ManagedSerialDevice::Command(
             "abc\r\n\x1a"
             "SEND OK\r\n"
         )

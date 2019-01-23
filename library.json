@@ -1,13 +1,13 @@
 {
-  "name": "arduino-async-duplex",
-  "keywords": "stream, duplex, at, modem",
+  "name": "arduino-managed-serial-device",
+  "keywords": "stream, duplex, managed, serial, commands",
   "description": "Easily and asynchronously interact with a serial device requiring call-and-response style commands.",
-  "homepage": "https://github.com/coddingtonbear/arduino-async-duplex",
+  "homepage": "https://github.com/coddingtonbear/arduino-managed-serial-device",
   "repository": {
     "type": "git",
-    "url": "https://github.com/coddingtonbear/arduino-async-duplex.git"
+    "url": "https://github.com/coddingtonbear/arduino-managed-serial-device.git"
   },
-  "version": "1.1.0",
+  "version": "1.2.0",
   "authors": {
     "name": "Adam Coddington",
     "url": "https://coddingtonbear.net/"

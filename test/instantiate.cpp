@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <Regexp.h>
 #include <ArduinoUnitTests.h>
-#include "../src/AsyncDuplex.h"
+#include "../src/ManagedSerialDevice.h"
 
 unittest(simple) {
     GodmodeState* state = GODMODE();
@@ -9,7 +9,7 @@ unittest(simple) {
 
     bool callbackExecuted = false;
 
-    AsyncDuplex handler = AsyncDuplex();
+    ManagedSerialDevice handler = ManagedSerialDevice();
     handler.begin(&Serial);
     handler.execute("TEST");
     handler.loop();
@@ -26,12 +26,12 @@ unittest(can_resolve_expectation) {
 
     bool callbackExecuted = false;
 
-    AsyncDuplex handler = AsyncDuplex();
+    ManagedSerialDevice handler = ManagedSerialDevice();
     handler.begin(&Serial);
     handler.execute(
         "TEST",
         "OK",
-        AsyncDuplex::NEXT,
+        ManagedSerialDevice::NEXT,
         [&callbackExecuted](MatchState ms) {
             callbackExecuted = true;
         }
@@ -57,16 +57,16 @@ unittest(can_fail_expectation) {
     bool callbackExecuted = false;
     bool failureCallbackExecuted = false;
 
-    AsyncDuplex handler = AsyncDuplex();
+    ManagedSerialDevice handler = ManagedSerialDevice();
     handler.begin(&Serial);
     handler.execute(
         "TEST",
         "OK",
-        AsyncDuplex::NEXT,
+        ManagedSerialDevice::NEXT,
         [&callbackExecuted](MatchState ms) {
             callbackExecuted = true;
         },
-        [&failureCallbackExecuted](AsyncDuplex::Command* cmd) {
+        [&failureCallbackExecuted](ManagedSerialDevice::Command* cmd) {
             failureCallbackExecuted = true;
         },
         0
@@ -92,12 +92,12 @@ unittest(can_fail_expectation_with_display) {
     bool callbackExecuted = false;
     bool failureCallbackExecuted = false;
 
-    AsyncDuplex handler = AsyncDuplex();
+    ManagedSerialDevice handler = ManagedSerialDevice();
     handler.begin(&Serial);
     handler.execute(
         "TEST",
         "OK",
-        AsyncDuplex::NEXT,
+        ManagedSerialDevice::NEXT,
         [&callbackExecuted](MatchState ms) {
             callbackExecuted = true;
         },
@@ -117,11 +117,11 @@ unittest(can_execute_from_object) {
     GodmodeState* state = GODMODE();
     state->resetPorts();
 
-    AsyncDuplex::Command cmd = AsyncDuplex::Command(
+    ManagedSerialDevice::Command cmd = ManagedSerialDevice::Command(
         "TEST",
         "XYZ"
     );
-    AsyncDuplex handler = AsyncDuplex();
+    ManagedSerialDevice handler = ManagedSerialDevice();
     handler.begin(&Serial);
     handler.execute(&cmd);
 
@@ -139,17 +139,17 @@ unittest(can_execute_chain) {
 
     uint8_t appendedCallbackCalls = 0;
 
-    AsyncDuplex::Command commands[] = {
-        AsyncDuplex::Command("TEST", "OK"),
-        AsyncDuplex::Command("TEST2", "OK"),
-        AsyncDuplex::Command("TEST3", "OK")
+    ManagedSerialDevice::Command commands[] = {
+        ManagedSerialDevice::Command("TEST", "OK"),
+        ManagedSerialDevice::Command("TEST2", "OK"),
+        ManagedSerialDevice::Command("TEST3", "OK")
     };
-    AsyncDuplex handler = AsyncDuplex();
+    ManagedSerialDevice handler = ManagedSerialDevice();
     handler.begin(&Serial);
     handler.executeChain(
         commands,
         3,
-        AsyncDuplex::Timing::ANY,
+        ManagedSerialDevice::Timing::ANY,
         [&appendedCallbackCalls](MatchState ms) {
             appendedCallbackCalls++;
         }
@@ -191,12 +191,12 @@ unittest(can_return_match_groups) {
 
     char matchGroupResult[10] = {'\0'};
 
-    AsyncDuplex handler = AsyncDuplex();
+    ManagedSerialDevice handler = ManagedSerialDevice();
     handler.begin(&Serial);
     handler.execute(
         "TEST",
         "OK%[([%d]+)%]",
-        AsyncDuplex::NEXT,
+        ManagedSerialDevice::NEXT,
         [&matchGroupResult](MatchState ms) {
             char buffer[5];
             ms.GetCapture(buffer, 0);
@@ -219,7 +219,7 @@ unittest(task_overflows_non_dangerous) {
     GodmodeState* state = GODMODE();
     state->resetPorts();
 
-    AsyncDuplex handler = AsyncDuplex();
+    ManagedSerialDevice handler = ManagedSerialDevice();
     handler.begin(&Serial);
 
     for(uint8_t i = 0; i < COMMAND_QUEUE_SIZE + 1; i++) {
@@ -241,7 +241,7 @@ unittest(can_register_and_run_hooks) {
 
     bool hookExecuted = false;
 
-    AsyncDuplex handler = AsyncDuplex();
+    ManagedSerialDevice handler = ManagedSerialDevice();
     handler.begin(&Serial);
 
     handler.registerHook(
