@@ -72,7 +72,7 @@ bool ManagedSerialDevice::wait(uint32_t _timeout, std::function<void()> feed_wat
 bool ManagedSerialDevice::abort() {
     if(queueLength > 0) {
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
-            ManagedSerialDevice::debugMessage("\t<Command Aborted>");
+            debugMessage("\t<Command Aborted>");
         #endif
 
         shiftLeft();
@@ -109,13 +109,13 @@ bool ManagedSerialDevice::execute(
 
     if(strlen(_command) > MAX_COMMAND_LENGTH - 1) {
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
-            ManagedSerialDevice::debugMessage("\t<Command Rejected>");
+            debugMessage("\t<Command Rejected>");
         #endif
         return false;
     }
     if(strlen(_expectation) > MAX_EXPECTATION_LENGTH - 1) {
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
-            ManagedSerialDevice::debugMessage("\t<Expectation Rejected>");
+            debugMessage("\t<Expectation Rejected>");
         #endif
         return false;
     }
@@ -179,19 +179,19 @@ bool ManagedSerialDevice::executeChain(
 
     Command scratch;
     Command chain = cmdArray[count - 1];
-    ManagedSerialDevice::prependCallback(&chain, _success, _failure);
+    prependCallback(&chain, _success, _failure);
 
     for(int16_t i = count - 2; i >= 0; i--) {
-        ManagedSerialDevice::copyCommand(
+        copyCommand(
             &scratch,
             &cmdArray[i]
         );
-        ManagedSerialDevice::prependCallback(&scratch, _success, _failure);
-        ManagedSerialDevice::createChain(
+        prependCallback(&scratch, _success, _failure);
+        createChain(
             &scratch,
             &chain
         );
-        ManagedSerialDevice::copyCommand(
+        copyCommand(
             &chain,
             &scratch
         );
@@ -226,7 +226,7 @@ void ManagedSerialDevice::createChain(Command* dest, const Command* toChain) {
         if(originalSuccess) {
             originalSuccess(ms);
         }
-        ManagedSerialDevice::execute(
+        execute(
             &chained,
             Timing::NEXT
         );
@@ -275,14 +275,14 @@ void ManagedSerialDevice::loop(){
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
             String nonMatching = String(inputBuffer);
             nonMatching.trim();
-            ManagedSerialDevice::debugMessage(
+            debugMessage(
                 "\t<-- " + nonMatching
             );
-            ManagedSerialDevice::debugMessage("\t<Command Timeout>");
+            debugMessage("\t<Command Timeout>");
         #endif
 
         Command failedCommand;
-        ManagedSerialDevice::copyCommand(&failedCommand, &commandQueue[0]);
+        copyCommand(&failedCommand, &commandQueue[0]);
         std::function<void(Command*)> fn = failedCommand.failure;
         if(fn) {
             // Clear delay settings before handing to error
@@ -318,7 +318,7 @@ void ManagedSerialDevice::loop(){
         }
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG_VERBOSE
-            ManagedSerialDevice::debugMessage(
+            debugMessage(
                 "\t  = (" + String(bufferPos) + ") \"" + String(inputBuffer) + "\""
             );
         #endif
@@ -332,10 +332,10 @@ void ManagedSerialDevice::loop(){
                 #ifdef MANAGED_SERIAL_DEVICE_DEBUG
                     String src = String(ms.src);
                     src.trim();
-                    ManagedSerialDevice::debugMessage(
+                    debugMessage(
                         "\t<-- " + src
                     );
-                    ManagedSerialDevice::debugMessage(
+                    debugMessage(
                         "\t<Expectation Matched>"
                     );
                 #endif
@@ -357,7 +357,7 @@ void ManagedSerialDevice::loop(){
     }
     if(!processing && queueLength > 0 && commandQueue[0].delay <= millis()) {
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
-            ManagedSerialDevice::debugMessage("\t--> " + String(commandQueue[0].command));
+            debugMessage("\t--> " + String(commandQueue[0].command));
         #endif
         inputBuffer[0] = '\0';
         bufferPos = 0;
@@ -374,13 +374,13 @@ bool ManagedSerialDevice::registerHook(
 ) {
     if(hookCount == MAX_HOOK_COUNT) {
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
-            ManagedSerialDevice::debugMessage("\t<Hook Rejected>");
+            debugMessage("\t<Hook Rejected>");
         #endif
         return false;
     }
     if(strlen(_expectation) + 1 > MAX_EXPECTATION_LENGTH) {
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
-            ManagedSerialDevice::debugMessage("\t<Expectation Rejected>");
+            debugMessage("\t<Expectation Rejected>");
         #endif
         return false;
     }
@@ -403,10 +403,10 @@ void ManagedSerialDevice::runHooks() {
             #ifdef MANAGED_SERIAL_DEVICE_DEBUG
                 String src = String(ms.src);
                 src.trim();
-                ManagedSerialDevice::debugMessage(
+                debugMessage(
                     "\t<-- " + src
                 );
-                ManagedSerialDevice::debugMessage(
+                debugMessage(
                     "\t<Hook Triggered>"
                 );
             #endif
@@ -425,14 +425,14 @@ void ManagedSerialDevice::getResponse(char* buffer, uint16_t length) {
 
 void ManagedSerialDevice::shiftRight() {
     for(int8_t i = 0; i < queueLength - 1; i++) {
-        ManagedSerialDevice::copyCommand(&commandQueue[i+1], &commandQueue[i]);
+        copyCommand(&commandQueue[i+1], &commandQueue[i]);
     }
     queueLength++;
 }
 
 void ManagedSerialDevice::shiftLeft() {
     for(int8_t i = queueLength - 1; i > 0; i--) {
-        ManagedSerialDevice::copyCommand(&commandQueue[i-1], &commandQueue[i]);
+        copyCommand(&commandQueue[i-1], &commandQueue[i]);
     }
     queueLength--;
 }
@@ -472,7 +472,7 @@ void ManagedSerialDevice::debugMessage(String msg) {
         std::cout << "\n";
     #endif
     #ifdef MANAGED_SERIAL_DEVICE_DEBUG_STREAM
-        ManagedSerialDevice::emitErrorMessage(msg.c_str());
+        emitErrorMessage(msg.c_str());
     #endif
 }
 
@@ -482,7 +482,7 @@ void ManagedSerialDevice::debugMessage(const char *msg) {
         std::cout << "\n";
     #endif
     #ifdef MANAGED_SERIAL_DEVICE_DEBUG_STREAM
-        ManagedSerialDevice::emitErrorMessage(msg);
+        emitErrorMessage(msg);
     #endif
 }
 #endif
