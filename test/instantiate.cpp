@@ -8,8 +8,8 @@ class TestingManagedSerialDevice: public ManagedSerialDevice {
     public:
 
     virtual void newLineReceived() {
-        char buffer[256];
-        getLatestLine(buffer, 256);
+        char buffer[8];
+        getLatestLine(buffer, 8);
         String line = String(buffer);
         line.trim();
         nextLogLineStart = bufferPos;
@@ -329,6 +329,17 @@ unittest(properly_identifies_newlines) {
     assertEqual(
         "beta",
         handler.testLines[1]
+    );
+
+    state->serialPort[0].dataIn = "0123456789\n";
+    handler.loop();
+    assertEqual(
+        3,
+        handler.testLineLength
+    );
+    assertEqual(
+        "0123456",
+        handler.testLines[2]
     );
 }
 

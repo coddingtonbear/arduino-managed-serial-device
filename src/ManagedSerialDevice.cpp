@@ -273,11 +273,14 @@ void ManagedSerialDevice::clearInputBuffer() {
 }
 
 void ManagedSerialDevice::getLatestLine(char* buffer, uint16_t length) {
-    strncpy(buffer, &inputBuffer[nextLogLineStart], length);
+    strncpy(buffer, &inputBuffer[nextLogLineStart], length - 1);
+    if(strlen(&inputBuffer[nextLogLineStart]) >= length) {
+        buffer[length - 1] = '\0';
+    }
 }
 
 void ManagedSerialDevice::newLineReceived() {
-    nextLogLineStart = bufferPos;
+    nextLogLineStart = bufferPos + 1;
 
     #ifdef MANAGED_SERIAL_DEVICE_DEBUG
     #ifndef MANAGED_SERIAL_DEVICE_DEBUG_VERBOSE
