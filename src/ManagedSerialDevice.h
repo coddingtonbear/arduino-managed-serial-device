@@ -121,6 +121,10 @@ class ManagedSerialDevice: public Stream {
         void shiftRight();
         void shiftLeft();
 
+        void getLatestLine(char*, uint16_t length);
+        virtual void newLineReceived();
+
+        void clearInputBuffer();
         void copyCommand(Command*, const Command*);
         void createChain(Command*, const Command*);
         void prependCallback(
@@ -128,6 +132,8 @@ class ManagedSerialDevice: public Stream {
             std::function<void(MatchState)> _success = NULL,
             std::function<void(Command*)> _failure = NULL
         );
+
+        uint16_t nextLogLineStart = 0;
 
         char inputBuffer[INPUT_BUFFER_LENGTH];
         uint16_t bufferPos = 0;

@@ -76,8 +76,7 @@ bool ManagedSerialDevice::abort() {
         #endif
 
         shiftLeft();
-        inputBuffer[0] = '\0';
-        bufferPos = 0;
+        clearInputBuffer();
         processing=false;
 
         return true;
@@ -267,6 +266,29 @@ void ManagedSerialDevice::prependCallback(
     }
 }
 
+void ManagedSerialDevice::clearInputBuffer() {
+    inputBuffer[0] = '\0';
+    bufferPos = 0;
+    nextLogLineStart = 0;
+}
+
+void ManagedSerialDevice::getLatestLine(char* buffer, uint16_t length) {
+    strncpy(buffer, &inputBuffer[nextLogLineStart], length);
+}
+
+void ManagedSerialDevice::newLineReceived() {
+    nextLogLineStart = bufferPos;
+
+    #ifdef MANAGED_SERIAL_DEVICE_DEBUG
+    #ifndef MANAGED_SERIAL_DEVICE_DEBUG_VERBOSE
+        char* line = &inputBuffer[nextLogLineStart];
+        debugMessage(
+            "\t  = (" + String(bufferPos) + ") \"" + line + "\""
+        );
+    #endif
+    #endif
+}
+
 void ManagedSerialDevice::loop(){
     if(!began) {
         return;
@@ -293,19 +315,20 @@ void ManagedSerialDevice::loop(){
         }
 
         shiftLeft();
-        inputBuffer[0] = '\0';
-        bufferPos = 0;
+        clearInputBuffer();
         processing=false;
     }
     while(stream->available()) {
-        bool shouldRunHooks = false;
+        bool foundNewline = false;
         uint8_t received = stream->read();
         if(received != '\0') {
             if(received == '\n') {
                 // If we've found a line ending, we should plan to run
                 // any registered hooks so they can check for unsolicited
                 // data that might be useful.
-                shouldRunHooks = true;
+                foundNewline = true;
+
+                newLineReceived();
             }
             if(bufferPos + 1 == INPUT_BUFFER_LENGTH) {
                 for(int32_t i = INPUT_BUFFER_LENGTH - 1; i > 0; i--) {
@@ -351,7 +374,7 @@ void ManagedSerialDevice::loop(){
             }
         }
 
-        if(shouldRunHooks) {
+        if(foundNewline) {
             runHooks();
         }
     }
@@ -359,8 +382,7 @@ void ManagedSerialDevice::loop(){
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
             debugMessage("\t--> " + String(commandQueue[0].command));
         #endif
-        inputBuffer[0] = '\0';
-        bufferPos = 0;
+        clearInputBuffer();
         stream->println(commandQueue[0].command);
         stream->flush();
         processing = true;
