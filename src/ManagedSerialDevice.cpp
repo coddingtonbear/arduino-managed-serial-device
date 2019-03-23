@@ -293,7 +293,7 @@ void ManagedSerialDevice::loop(){
     if(!began) {
         return;
     }
-    if(processing && (timeout < millis())) {
+    if(processing && (millis() > timeout)) {
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
             String nonMatching = String(inputBuffer);
             nonMatching.trim();
