@@ -68,7 +68,7 @@ class ManagedSerialDevice: public Stream {
             uint16_t _timeout = COMMAND_TIMEOUT,
             uint32_t _delay = 0
         );
-        virtual bool execute(
+        bool execute(
             const char *_command,
             const char *_expectation = "",
             std::function<void(MatchState)> _success = NULL,
@@ -123,6 +123,7 @@ class ManagedSerialDevice: public Stream {
 
         void getLatestLine(char*, uint16_t length);
         virtual void newLineReceived();
+        virtual void commandSent(char*);
 
         void clearInputBuffer();
         void copyCommand(Command*, const Command*);

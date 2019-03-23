@@ -292,6 +292,9 @@ void ManagedSerialDevice::newLineReceived() {
     #endif
 }
 
+void ManagedSerialDevice::commandSent(char*) {
+}
+
 void ManagedSerialDevice::loop(){
     if(!began) {
         return;
@@ -386,8 +389,10 @@ void ManagedSerialDevice::loop(){
             debugMessage("\t--> " + String(commandQueue[0].command));
         #endif
         clearInputBuffer();
+
         stream->println(commandQueue[0].command);
         stream->flush();
+        commandSent(commandQueue[0].command);
         processing = true;
         timeout = millis() + commandQueue[0].timeout;
     }
