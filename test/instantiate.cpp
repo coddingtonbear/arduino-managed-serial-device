@@ -3,6 +3,26 @@
 #include <ArduinoUnitTests.h>
 #include "../src/ManagedSerialDevice.h"
 
+
+class TestingManagedSerialDevice: public ManagedSerialDevice {
+    public:
+
+    virtual void newLineReceived() {
+        char buffer[256];
+        getLatestLine(buffer, 256);
+        String line = String(buffer);
+        line.trim();
+        nextLogLineStart = bufferPos;
+
+        testLines[testLineLength++] = line;
+
+        ManagedSerialDevice::newLineReceived();
+    }
+
+    uint8_t testLineLength = 0;
+    String testLines[10];
+};
+
 unittest(simple) {
     GodmodeState* state = GODMODE();
     state->resetPorts();
@@ -268,6 +288,48 @@ unittest(can_register_and_run_hooks) {
     state->serialPort[0].dataIn = "\r\n";
     handler.loop();
     assertTrue(hookExecuted);
+}
+
+unittest(properly_identifies_newlines) {
+    GodmodeState* state = GODMODE();
+    state->resetPorts();
+
+    TestingManagedSerialDevice handler = TestingManagedSerialDevice();
+    handler.begin(&Serial);
+
+    state->serialPort[0].dataIn = "alpha";
+    handler.loop();
+    assertEqual(
+        0,
+        handler.testLineLength
+    );
+    state->serialPort[0].dataIn = "\n";
+    handler.loop();
+    assertEqual(
+        1,
+        handler.testLineLength
+    );
+    assertEqual(
+        "alpha",
+        handler.testLines[0]
+    );
+
+    state->serialPort[0].dataIn = "beta";
+    handler.loop();
+    assertEqual(
+        1,
+        handler.testLineLength
+    );
+    state->serialPort[0].dataIn = "\n";
+    handler.loop();
+    assertEqual(
+        2,
+        handler.testLineLength
+    );
+    assertEqual(
+        "beta",
+        handler.testLines[1]
+    );
 }
 
 unittest_main()
