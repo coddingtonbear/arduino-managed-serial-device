@@ -68,7 +68,7 @@ class ManagedSerialDevice: public Stream {
             uint16_t _timeout = COMMAND_TIMEOUT,
             uint32_t _delay = 0
         );
-        bool execute(
+        virtual bool execute(
             const char *_command,
             const char *_expectation = "",
             std::function<void(MatchState)> _success = NULL,
