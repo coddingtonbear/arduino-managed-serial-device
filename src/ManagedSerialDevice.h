@@ -144,12 +144,12 @@ class ManagedSerialDevice: public Stream {
 
         Hook hooks[MAX_HOOK_COUNT];
         uint8_t hookCount = 0;
-        void runHooks();
+        virtual void runHooks();
 
-        void emitErrorMessage(const char*);
+        virtual void emitErrorMessage(const char*);
         #ifdef MANAGED_SERIAL_DEVICE_DEBUG
-            void debugMessage(String);
-            void debugMessage(const char*);
+            virtual void debugMessage(String);
+            virtual void debugMessage(const char*);
         #endif
         Stream* errorStream;
         Stream* stream;
