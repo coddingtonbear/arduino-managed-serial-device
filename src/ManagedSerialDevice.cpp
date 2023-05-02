@@ -207,7 +207,7 @@ bool ManagedSerialDevice::executeChain(
     std::function<void(MatchState)> _success,
     std::function<void(Command*)> _failure
 ) {
-    ManagedSerialDevice::executeChain(
+    return ManagedSerialDevice::executeChain(
         cmdArray,
         count,
         ManagedSerialDevice::Timing::ANY,
